@@ -3,6 +3,7 @@ order: 4
 title: Linux
 tagline: Command line confidence — files, processes, services, networking and shell scripting.
 status: skeleton
+color: "#16a34a"
 modules:
   - title: Shell Basics
     steps: []

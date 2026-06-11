@@ -3,6 +3,7 @@ order: 1
 title: Splunk
 tagline: From zero to a confident Splunk user — searching, SPL, dashboards, alerts, data onboarding and admin basics.
 status: ready
+color: "#d9480f"
 modules:
   - title: Foundations
     steps:

@@ -17,7 +17,7 @@ const topics = loadTopics();
 
   <div class="topic-grid">
     {topics.map((t) => (
-      <a class="card" href={`/topics/${t.id}/`}>
+      <a class="card" href={`/topics/${t.id}/`} style={`--topic:${t.color}`}>
         <h3>{t.title}</h3>
         <p>{t.tagline}</p>
         {t.status === 'ready'

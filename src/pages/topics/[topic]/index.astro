@@ -8,52 +8,77 @@ export function getStaticPaths() {
 
 const { t } = Astro.props;
 const total = stepCount(t);
+
+// number steps globally across modules (Step 1, Step 2, ...)
+let n = 0;
+const modules = t.modules.map((m) => ({
+  ...m,
+  steps: m.steps.map((s) => ({ ...s, n: ++n })),
+}));
 ---
 <Base title={t.title} description={t.tagline}>
-  <p class="crumbs"><a href="/">Topics</a> / {t.title}</p>
-  <section class="hero">
-    <h1>{t.title}</h1>
-    <p class="lead">{t.tagline}</p>
-    {t.status !== 'ready' && (
-      <p class="badge skeleton">
-        This path is a skeleton — the outline exists, the steps need authors. Contributions welcome.
-      </p>
-    )}
-    {total > 0 && (
-      <div class="progress">
-        <span data-progress-label data-topic={t.id} data-total={total}>0 / {total} steps completed</span>
-        <div class="bar"><span data-progress-bar></span></div>
-      </div>
-    )}
-  </section>
-
-  {t.modules.map((mod) => (
-    <section class="module">
-      <h2>{mod.title}</h2>
-      {mod.steps.length > 0 ? (
-        <ol class="steps">
-          {mod.steps.map((s) => (
-            <li data-step={`${t.id}/${s.slug}`}>
-              <a href={`/topics/${t.id}/${s.slug}/`}>{s.title}</a>
-            </li>
-          ))}
-        </ol>
-      ) : (
-        <div class="empty">No steps yet — this module is waiting for a contributor.</div>
+  <div style={`--topic:${t.color}`}>
+    <p class="crumbs"><a href="/">Topics</a> / {t.title}</p>
+    <section class="topic-hero">
+      <h1>{t.title}</h1>
+      <p class="lead">{t.tagline}</p>
+      {t.status !== 'ready' && (
+        <p><span class="badge skeleton">
+          This path is a skeleton — the outline exists, the steps need authors. Contributions welcome.
+        </span></p>
+      )}
+      {total > 0 && (
+        <div class="progress">
+          <span data-progress-label data-total={total}>0 / {total} completed</span>
+          <div class="bar"><span data-progress-bar></span></div>
+        </div>
       )}
     </section>
-  ))}
+
+    {modules.map((mod) => (
+      <section class="module">
+        <h2>{mod.title}</h2>
+        {mod.steps.length > 0 ? (
+          <ol class="path">
+            {mod.steps.map((s) => (
+              <li class="station" data-step={`${t.id}/${s.slug}`}>
+                <span class="dot"></span>
+                <a class="station-card" href={`/topics/${t.id}/${s.slug}/`}>
+                  <span class="label">
+                    <span class="t">{s.title}</span>
+                    <span class="meta">Step {s.n} of {total}</span>
+                  </span>
+                  <span class="youarehere">You are here</span>
+                  <span class="check">✓</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <div class="empty">No steps yet — this module is waiting for a contributor.</div>
+        )}
+      </section>
+    ))}
+  </div>
 
   <script>
     const done = JSON.parse(localStorage.getItem('aio-done') || '{}');
+    const stations = [...document.querySelectorAll('[data-step]')];
     let count = 0;
-    document.querySelectorAll('[data-step]').forEach((el) => {
-      if (done[el.dataset.step]) { el.classList.add('done'); count++; }
-    });
+    let currentSet = false;
+    for (const el of stations) {
+      if (done[el.dataset.step]) {
+        el.classList.add('done');
+        count++;
+      } else if (!currentSet) {
+        el.classList.add('current');
+        currentSet = true;
+      }
+    }
     const label = document.querySelector('[data-progress-label]');
     if (label) {
       const total = Number(label.dataset.total);
-      label.textContent = `${count} / ${total} steps completed`;
+      label.textContent = `${count} / ${total} completed`;
       const bar = document.querySelector('[data-progress-bar]');
       if (bar && total > 0) bar.style.width = `${(count / total) * 100}%`;
     }

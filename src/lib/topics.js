@@ -14,6 +14,7 @@ export function loadTopics() {
         throw new Error(`Topic file ${f} is missing required "id" or "title"`);
       }
       topic.modules ??= [];
+      topic.color ??= '#0f766e';
       for (const mod of topic.modules) mod.steps ??= [];
       return topic;
     })

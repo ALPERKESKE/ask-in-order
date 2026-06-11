@@ -3,6 +3,7 @@ order: 2
 title: Kubernetes
 tagline: Containers at scale — pods, deployments, services, and running real workloads.
 status: skeleton
+color: "#2563eb"
 modules:
   - title: Foundations
     steps: []

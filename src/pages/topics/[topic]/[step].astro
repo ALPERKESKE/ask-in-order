@@ -15,12 +15,13 @@ const { t, step, module: mod, index, total, prev, next } = Astro.props;
 const stepKey = `${t.id}/${step.slug}`;
 ---
 <Base title={`${step.title} — ${t.title}`} description={step.goal}>
+  <div style={`--topic:${t.color}`}>
   <p class="crumbs">
     <a href="/">Topics</a> / <a href={`/topics/${t.id}/`}>{t.title}</a> / {step.title}
   </p>
 
   <p class="step-meta">{mod.title} · step {index + 1} of {total}</p>
-  <h1>{step.title}</h1>
+  <h1 class="step-title">{step.title}</h1>
 
   <div class="box goal">
     <h2>Goal — what you'll know after this step</h2>
@@ -68,6 +69,7 @@ const stepKey = `${t.id}/${step.slug}`;
       repository is public. Found a better prompt for this step? That's
       exactly what belongs in the discussion — or straight into a pull request.
     </p>
+  </div>
   </div>
 
   <script>

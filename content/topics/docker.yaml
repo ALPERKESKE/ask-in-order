@@ -3,6 +3,7 @@ order: 3
 title: Docker
 tagline: From "it works on my machine" to images, containers, compose and production habits.
 status: skeleton
+color: "#0891b2"
 modules:
   - title: Foundations — Images and Containers
     steps: []
