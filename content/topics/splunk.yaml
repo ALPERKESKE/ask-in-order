@@ -1,0 +1,398 @@
+id: splunk
+order: 1
+title: Splunk
+tagline: From zero to a confident Splunk user — searching, SPL, dashboards, alerts, data onboarding and admin basics.
+status: ready
+modules:
+  - title: Foundations
+    steps:
+      - slug: what-is-splunk
+        title: "What Splunk actually is"
+        goal: "Explain in your own words what Splunk does, what problems it solves, and how it differs from a database or a monitoring tool."
+        prompt: |
+          I'm starting a structured learning path for Splunk and I know nothing about it yet.
+          Act as my instructor. Explain:
+          1) What Splunk is and the core problem it solves (machine data: logs, metrics, events).
+          2) Three concrete real-world scenarios where teams use it (security, IT ops, business analytics) — one short story each.
+          3) How it differs from a relational database and from a tool like Grafana/Prometheus.
+          Keep it under 500 words, no marketing language.
+          Then ask me 2 short questions to check I understood, one at a time, and wait for my answer before continuing.
+        quiz_prompt: |
+          Quiz me on "what Splunk is": 3 questions, one at a time. Include one scenario question
+          ("a team wants to do X — is Splunk a good fit, why/why not?"). Grade each answer briefly.
+        practice: "Write one paragraph (anywhere — notes app is fine) describing a problem from your own work or home lab that Splunk could solve."
+
+      - slug: core-concepts
+        title: "Events, indexes, sourcetypes — the data model"
+        goal: "Know what an event, index, sourcetype, source and host are, and understand why Splunk applies schema at search time."
+        prompt: |
+          I'm learning Splunk. I know roughly what it's for, but not how it organizes data.
+          Act as my instructor and teach me the five core concepts: event, index, sourcetype, source, host.
+          For each: a one-line definition plus a concrete example using an nginx access log line.
+          Then explain "schema on read / schema at search time" and why it's a big deal compared to
+          defining table columns upfront in a database.
+          Finally ask me 3 check questions one at a time (e.g. "an nginx log and a firewall log arrive —
+          same index or different? same sourcetype or different?") and wait for my answers.
+        quiz_prompt: |
+          Quiz me on Splunk's data model (event, index, sourcetype, source, host, schema-on-read).
+          5 questions, one at a time, mostly scenario-based. Grade each answer and correct me where I'm wrong.
+        practice: "Sketch (on paper) how you'd organize three data sources — web server logs, Linux syslog, application JSON logs — into indexes and sourcetypes."
+
+      - slug: set-up-a-sandbox
+        title: "Set up your own Splunk sandbox"
+        goal: "Have a running Splunk instance you can experiment in — Docker is the fastest route — and know what the free license does and doesn't allow."
+        prompt: |
+          I'm learning Splunk and need a personal sandbox. I have Docker available.
+          Act as my hands-on guide:
+          1) Give me a single docker run (or docker compose) command for the official splunk/splunk image,
+             with the web UI on port 8000 and an admin password I set myself.
+          2) Explain what each option in the command does.
+          3) Explain the free/trial license limits in two sentences.
+          4) Tell me how to verify it's healthy and log in for the first time.
+          If something might go wrong (slow first start, low RAM), warn me up front. I'll run the
+          commands and report back — wait for me and help me troubleshoot before moving on.
+        quiz_prompt: |
+          Ask me 3 quick questions about my new Splunk sandbox: where does the web UI live, what license
+          is it running, and what's one limitation I should remember. One at a time, grade my answers.
+        practice: "Actually run the container, log in at http://localhost:8000, and find the search bar. Don't continue the path until this works."
+
+      - slug: first-searches
+        title: "Your first searches"
+        goal: "Run searches in the Search & Reporting app, use the time range picker, and explore Splunk's own _internal index as free sample data."
+        prompt: |
+          My Splunk sandbox is running and I'm in the Search & Reporting app for the first time.
+          Act as my instructor:
+          1) Explain the anatomy of the search screen: search bar, time range picker, events tab, fields sidebar.
+          2) Have me run: index=_internal — and explain what this index is and why it's perfect for practice.
+          3) Show me how to narrow by time (last 15 minutes) and why time range is the single most
+             important performance habit in Splunk.
+          4) Have me click a field in the sidebar and explain what I'm seeing.
+          Give me the searches one at a time, wait for me to run each and tell you what I see.
+        quiz_prompt: |
+          Quiz me on Splunk search basics: 4 questions, one at a time — include one about why
+          searching "All time" is a bad habit and one about what the fields sidebar shows.
+        practice: "Run index=_internal over the last 15 minutes, find the sourcetype field in the sidebar, and list which sourcetypes your own instance generates."
+
+  - title: SPL Fundamentals
+    steps:
+      - slug: search-language-basics
+        title: "SPL building blocks: keywords, operators, pipes"
+        goal: "Combine keywords, field=value pairs, AND/OR/NOT and wildcards, and understand the pipe as SPL's core idea."
+        prompt: |
+          I'm learning SPL (Splunk's search language). I can run basic searches on index=_internal.
+          Act as my instructor and teach me the building blocks:
+          1) Bare keywords vs field=value searches — when does each match?
+          2) Boolean operators AND/OR/NOT (and that AND is implicit), parentheses, wildcards.
+          3) The pipe | — explain it with a Unix-pipeline analogy: search first, then transform.
+          Use index=_internal in every example so I can run them immediately.
+          Give me 3 exercises of increasing difficulty ("find all ERROR events from sourcetype X in the
+          last hour", etc.), one at a time, and check my SPL before giving me the next one.
+        quiz_prompt: |
+          Quiz me on SPL basics: 5 questions, one at a time. Mix "what does this search return?" with
+          "write SPL that does X". Grade strictly and show the idiomatic version of my answers.
+        practice: "On your sandbox, write one search combining a keyword, a field=value filter and NOT — and confirm the result set changes as you expect."
+
+      - slug: working-with-fields
+        title: "Working with fields: table, rename, dedup"
+        goal: "Shape raw events into readable output with fields, table, rename and dedup, and understand auto-extracted vs manual fields."
+        prompt: |
+          I'm learning SPL. I can filter events with keywords, field=value and booleans.
+          Act as my instructor and teach me how to shape results:
+          1) How Splunk auto-extracts fields at search time (key=value pairs, JSON) and when it can't.
+          2) The commands fields, table, rename, dedup — one runnable index=_internal example each,
+             and the difference between fields (performance) and table (presentation).
+          3) A combined example building a clean table from raw events.
+          Then give me 2 exercises, one at a time, and review my SPL before continuing.
+        quiz_prompt: |
+          Quiz me on field manipulation in SPL (fields vs table, rename, dedup, auto-extraction):
+          4 questions one at a time, at least two "write the SPL" tasks. Grade my answers.
+        practice: "Build a deduplicated table of sourcetype, host and log_level from index=_internal."
+
+      - slug: stats-essentials
+        title: "Aggregating with stats"
+        goal: "Use stats with count, sum, avg, min/max, distinct_count and 'by' clauses — the single most important SPL command."
+        prompt: |
+          I'm learning SPL and comfortable filtering and tabling events. Now teach me stats —
+          I'm told it's the most important command in Splunk.
+          Act as my instructor:
+          1) The mental model: stats collapses events into a summary table (compare to SQL GROUP BY).
+          2) Functions count, dc, sum, avg, min, max, values, latest — short runnable
+             index=_internal examples.
+          3) Single and multiple "by" fields.
+          4) The classic pattern: stats count by X | sort -count.
+          Then give me 3 exercises of increasing difficulty, one at a time, and review each answer.
+        quiz_prompt: |
+          Quiz me on the stats command: 5 questions one at a time. Include one trap question about
+          what happens to fields that aren't in the stats output, and two "write the SPL" tasks.
+        practice: "Find the top 5 noisiest sourcetypes in your _internal index by event count, using stats and sort — not the top command."
+
+      - slug: sorting-top-rare
+        title: "sort, top and rare"
+        goal: "Order results with sort and get instant frequency analysis with top and rare — and know when to use them vs stats."
+        prompt: |
+          I'm learning SPL and just learned stats. Teach me sort, top and rare:
+          1) sort with ascending/descending and multiple fields.
+          2) top and rare: what they output (count + percent), their limit option, and the "by" clause.
+          3) When top is enough vs when I should reach for stats — concrete guidance.
+          Runnable index=_internal examples for everything. Then 2 exercises one at a time with review.
+        quiz_prompt: |
+          Quiz me on sort/top/rare: 4 questions one at a time, including one asking me to produce the
+          same output with top and with stats+sort, and explain which I'd use when.
+        practice: "Use rare on the sourcetype field of _internal — does anything surprising show up at the bottom of your instance's activity?"
+
+      - slug: eval-essentials
+        title: "Computing new fields with eval"
+        goal: "Create calculated fields with eval: arithmetic, string functions, if() and case() conditionals."
+        prompt: |
+          I'm learning SPL — comfortable with filtering, stats, sort. Now teach me eval:
+          1) The mental model: eval adds/overwrites a field per event.
+          2) Arithmetic (bytes to MB), string functions (lower, substr, replace, the . concat operator).
+          3) Conditionals: if() and case() — e.g. classify response times into fast/ok/slow buckets.
+          4) eval feeding into stats: eval first, aggregate after.
+          Runnable index=_internal examples. Then 3 exercises one at a time; review my SPL each time
+          and show the idiomatic form if mine is clumsy.
+        quiz_prompt: |
+          Quiz me on eval: 5 questions one at a time, mostly "write the eval expression for X".
+          Include one combining eval and stats. Grade strictly.
+        practice: "In _internal, create a field that buckets events by the length of their _raw text (short/medium/long) and count events per bucket."
+
+  - title: Intermediate SPL
+    steps:
+      - slug: timechart
+        title: "Time series with timechart"
+        goal: "Turn events into time series with timechart, control granularity with span, and split series with a by-field."
+        prompt: |
+          I'm learning SPL — solid on stats and eval. Teach me timechart:
+          1) How it differs from stats (time becomes the x-axis automatically).
+          2) span= for granularity and what happens if I omit it.
+          3) Splitting into multiple series with "by", and the limit/useother options.
+          4) Where to click to see the chart instead of the table.
+          Runnable index=_internal examples (e.g. timechart count by sourcetype). Then 2 exercises
+          one at a time with review.
+        quiz_prompt: |
+          Quiz me on timechart: 4 questions one at a time. Include one "stats or timechart?" scenario
+          and one about choosing a sensible span for a 7-day search.
+        practice: "Chart your _internal event volume per sourcetype over the last 24 hours with a 1-hour span. Find your instance's quietest hour."
+
+      - slug: eventstats-streamstats
+        title: "eventstats and streamstats"
+        goal: "Add aggregate context to events without collapsing them (eventstats) and compute running/windowed values (streamstats)."
+        prompt: |
+          I'm learning SPL — comfortable with stats and timechart. Teach me eventstats and streamstats:
+          1) eventstats: like stats, but the aggregate is attached to every event instead of collapsing
+             them. Example use: "show events whose size is above the average".
+          2) streamstats: running aggregates in event order; window= and current= options.
+             Example use: running count per host, or comparing each event to the previous one.
+          3) A clear side-by-side: same data through stats vs eventstats vs streamstats.
+          Runnable index=_internal examples. Then 2 exercises one at a time, review my answers.
+        quiz_prompt: |
+          Quiz me on stats vs eventstats vs streamstats: 4 scenario questions one at a time
+          ("I need X — which command?"), then one "write the SPL" task. Grade my reasoning, not just the answer.
+        practice: "In _internal, find events whose _raw length is more than twice the average length for their sourcetype — this needs eventstats."
+
+      - slug: lookups
+        title: "Enriching data with lookups"
+        goal: "Create a CSV lookup, enrich search results with the lookup command, and know when automatic lookups make sense."
+        prompt: |
+          I'm learning SPL — good with stats and eval. Teach me lookups:
+          1) The concept: joining a small reference table (CSV) onto events at search time —
+             e.g. mapping status codes to descriptions, hosts to owners.
+          2) Walk me through creating a small CSV lookup in the UI (Settings → Lookups), step by step.
+          3) The lookup command syntax and the inputlookup/outputlookup commands.
+          4) Automatic lookups in one paragraph — what they are and one caution.
+          I'll follow along in my sandbox; give me the steps in stages and wait for my confirmation
+          after each stage.
+        quiz_prompt: |
+          Quiz me on lookups: 4 questions one at a time — include one about lookup vs join,
+          and one "design question": what lookup table would help in a given scenario.
+        practice: "Create a CSV mapping your _internal sourcetypes to a friendly label and a category, upload it as a lookup, and enrich a stats result with it."
+
+      - slug: subsearches-and-joins
+        title: "Subsearches, join — and why stats usually wins"
+        goal: "Use subsearches and join when needed, know their hard limits, and recognize the stats-based patterns that replace them."
+        prompt: |
+          I'm learning SPL at intermediate level. Teach me subsearches and join — including why
+          experienced Splunk users avoid them:
+          1) Subsearch mechanics: [ ] runs first, results become filter conditions. One runnable example.
+          2) The hard limits (result caps, time limits) and how they silently truncate.
+          3) join: syntax, inner/outer — and its limits.
+          4) The important part: show the idiomatic stats alternative. Take one concrete "correlate
+             two sourcetypes" problem and solve it twice: with join, then with
+             (sourcetype=A OR sourcetype=B) | stats values(...) by common_field. Explain why the
+             second scales and the first breaks.
+          Then give me one correlation exercise and review whether I chose the right approach.
+        quiz_prompt: |
+          Quiz me on subsearches and join: 4 questions one at a time. At least one must give me a
+          join-based search and ask me to rewrite it with stats. Grade the rewrite strictly.
+        practice: "Write a correlation search across two _internal sourcetypes using the stats pattern (no join). Confirm the same answer a join would give."
+
+  - title: Dashboards, Alerts & Reports
+    steps:
+      - slug: reports-saved-searches
+        title: "Saved searches and reports"
+        goal: "Save a search as a report, schedule it, and understand how scheduled searches are the engine behind dashboards and alerts."
+        prompt: |
+          I'm learning Splunk — my SPL is decent. Teach me saved searches and reports:
+          1) Saving a search as a report from the UI; report permissions (private vs app-shared).
+          2) Scheduling: cron-style schedules, time ranges, and what "schedule window" does.
+          3) Why scheduling matters: scheduled searches power alerts and dashboard panels — they're
+             also a common cause of overloaded Splunk servers. Two sentences on being a good citizen.
+          I'll follow along in my sandbox. Walk me through saving and scheduling one report on
+          index=_internal, step by step, waiting for my confirmation.
+        quiz_prompt: |
+          Quiz me on reports and scheduling: 3 questions one at a time, including one about what
+          happens when too many searches are scheduled at the same minute.
+        practice: "Save a report 'Hourly event volume by sourcetype' on _internal and schedule it to run every hour."
+
+      - slug: dashboards
+        title: "Building your first dashboard"
+        goal: "Build a dashboard with several panels in Dashboard Studio, and use a time range input that all panels obey."
+        prompt: |
+          I'm learning Splunk and want my first real dashboard. I'll use Dashboard Studio in my sandbox,
+          with index=_internal as data.
+          Act as my guide, stage by stage and wait for me after each:
+          1) Create a new dashboard in Dashboard Studio (explain Studio vs Classic in two sentences).
+          2) Panel 1: single value — total events in the selected time range.
+          3) Panel 2: line chart — event volume over time by sourcetype (timechart).
+          4) Panel 3: table — top 10 sourcetypes with counts.
+          5) Add a time range input and wire every panel to it.
+          Give me each panel's SPL and the clicks needed. If my panel shows something unexpected,
+          help me debug before moving on.
+        quiz_prompt: |
+          Quiz me on dashboard concepts: 4 questions one at a time — panel data sources, inputs/tokens,
+          Studio vs Classic, and one performance question about many panels sharing one base search.
+        practice: "Add a fourth panel of your own choice to the dashboard. Anything — but you must write the SPL yourself."
+
+      - slug: alerts
+        title: "Alerts that don't cry wolf"
+        goal: "Create a scheduled alert with a sensible trigger condition, choose alert actions, and use throttling to prevent alert spam."
+        prompt: |
+          I'm learning Splunk — comfortable with SPL and reports. Teach me alerting:
+          1) Anatomy of an alert: search + schedule + trigger condition + action.
+          2) Scheduled vs real-time alerts — and why real-time is rarely the right answer.
+          3) Trigger conditions (number of results, custom), and trigger "once" vs "for each result".
+          4) Throttling: what it does and why every alert should consider it.
+          5) Actions overview: email, webhook, run a script.
+          Walk me through creating one alert in my sandbox on index=_internal log_level=ERROR,
+          step by step, waiting for me. Then discuss: what makes an alert useful vs noisy —
+          give me 3 principles.
+        quiz_prompt: |
+          Quiz me on alerting: 4 questions one at a time, including one scenario where I must choose
+          schedule, trigger condition and throttle window for a given requirement — and defend the choice.
+        practice: "Create an alert that fires when ERROR events in _internal exceed a threshold in 15 minutes, throttled to at most one notification per hour."
+
+      - slug: search-performance
+        title: "Why is my search slow?"
+        goal: "Read the Job Inspector, and apply the core performance habits: tight time ranges, early filtering, fields over table, avoiding leading wildcards."
+        prompt: |
+          I'm learning Splunk and my searches are getting slower as I get more ambitious.
+          Act as my performance coach:
+          1) How a search executes: indexers scan buckets by time, then filter, then transform —
+             why the time range and the first pipe segment dominate cost.
+          2) The Job Inspector: where to find it and the 2–3 numbers worth reading first.
+          3) The habit list: filter early (index/sourcetype/keywords before first pipe), use fields
+             early to cut data volume, avoid leading wildcards (*error), prefer tstats-able patterns —
+             explain each in 2-3 sentences with a bad-vs-good SPL pair.
+          Then show me one deliberately bad search on _internal and have me fix it step by step.
+        quiz_prompt: |
+          Quiz me on search performance: 4 questions one at a time. Show me slow SPL snippets and have
+          me identify the problem and rewrite. Grade on whether my rewrite preserves the same results.
+        practice: "Take your heaviest search from this path, open the Job Inspector, note the runtime, apply two optimizations, and measure again."
+
+  - title: Getting Data In
+    steps:
+      - slug: forwarders-and-inputs
+        title: "Forwarders and file inputs"
+        goal: "Understand the Universal Forwarder's role, and configure a file monitor input so a log file flows into a chosen index."
+        prompt: |
+          I'm learning Splunk administration basics. My sandbox runs in Docker. Teach me how data
+          gets in via forwarders and inputs:
+          1) The Universal Forwarder: what it is, why production hosts run it instead of sending
+             logs directly, and the UF → indexer flow (port 9997).
+          2) inputs.conf: the [monitor://...] stanza — index, sourcetype, and what each line does.
+          3) For my single-container sandbox: show me the simplest way to ingest a local file
+             (UI: Settings → Add Data, or a monitor stanza) into a new index called "practice".
+          4) How to create that index first, in the UI.
+          Walk me through stages and wait for my confirmation; help me verify the data arrived
+          with a search.
+        quiz_prompt: |
+          Quiz me on forwarders and inputs: 4 questions one at a time — UF vs heavy forwarder in one,
+          a broken inputs.conf stanza to fix in another.
+        practice: "Create an index named practice, ingest any local log file into it with sourcetype=mylog, and confirm with index=practice that events arrived with sensible timestamps."
+
+      - slug: http-event-collector
+        title: "HTTP Event Collector (HEC)"
+        goal: "Enable HEC, create a token, and send events with curl — both the JSON /event endpoint and the /raw endpoint."
+        prompt: |
+          I'm learning Splunk data onboarding. Teach me the HTTP Event Collector hands-on:
+          1) What HEC is for (apps/devices that can speak HTTP but can't run a forwarder).
+          2) Enabling HEC and creating a token in the UI — step by step in my sandbox.
+          3) Sending with curl: the /services/collector/event endpoint with a JSON body
+             (event, sourcetype, index fields), and the /raw endpoint for plain text.
+          4) The Authorization: Splunk <token> header, and the http vs https gotcha.
+          Give me curl commands I can run, wait for my results, and help me verify the events in search.
+        quiz_prompt: |
+          Quiz me on HEC: 4 questions one at a time — endpoint differences, what's in the JSON envelope,
+          token auth, and one debugging scenario (curl returns an error — walk through diagnosis).
+        practice: "Create a HEC token and send 5 JSON events with curl carrying a custom field, then find them in search and confirm the field was extracted."
+
+      - slug: parsing-and-onboarding
+        title: "Parsing: timestamps, line breaking, sourcetypes"
+        goal: "Understand what props.conf controls at parse time — timestamp extraction, line breaking, sourcetype definitions — and recognize broken onboarding when you see it."
+        prompt: |
+          I'm learning Splunk data onboarding beyond the happy path. Teach me parse-time configuration:
+          1) What happens at parse time vs search time — which decisions are permanent
+             (linebreaking, timestamps, index) and which are flexible (field extractions).
+          2) props.conf essentials: TIME_PREFIX, TIME_FORMAT, MAX_TIMESTAMP_LOOKAHEAD,
+             LINE_BREAKER, SHOULD_LINEMERGE, TRUNCATE — one line each on what they fix.
+          3) The classic failure smells: events with the wrong year, multi-line stack traces split
+             into many events, all events sharing the ingest time — what misconfiguration causes each.
+          4) Why "define a proper sourcetype per format" is the core onboarding discipline.
+          Then give me one broken-looking scenario at a time (3 total) and have me diagnose which
+          setting is wrong.
+        quiz_prompt: |
+          Quiz me on parse-time vs search-time and props.conf: 5 questions one at a time, mostly
+          diagnosis scenarios ("events look like X — what's misconfigured?"). Grade my reasoning.
+        practice: "Ingest a small multi-line log sample (e.g. a Java stack trace) into your practice index and check: did line breaking and the timestamps come out right? If not, fix the sourcetype config."
+
+  - title: Administration Basics
+    steps:
+      - slug: architecture-and-scaling
+        title: "Splunk architecture: from one box to clusters"
+        goal: "Describe the roles (search head, indexer, forwarder), when a deployment splits into tiers, and what indexer clustering and search head clustering add."
+        prompt: |
+          I'm learning Splunk administration. My only experience is a single-container sandbox.
+          Teach me how real deployments are shaped:
+          1) The three roles living inside my single instance: search head, indexer, forwarder duties.
+          2) Why and when they split: data volume and search load — typical small/medium/large shapes.
+          3) Indexer clustering: replication factor, search factor, the cluster manager — what failure
+             it protects against, in plain words.
+          4) Search head clustering: what it gives (HA for the UI/knowledge objects) and the deployer's job.
+          5) One diagram in ASCII art of a mid-size deployment with the data flow arrows.
+          Then ask me 3 questions one at a time, scenario-style ("company X has Y GB/day — what shape?").
+        quiz_prompt: |
+          Quiz me on Splunk architecture: 4 questions one at a time, including one on replication
+          factor vs search factor and one deployment-sizing scenario. Grade my reasoning.
+        practice: "Draw (paper is fine) the architecture you'd propose for a company ingesting 200 GB/day with 50 users — label every role and data flow."
+
+      - slug: users-roles-troubleshooting
+        title: "Users, roles, and troubleshooting Splunk itself"
+        goal: "Create users and roles with index-level restrictions, and know the first places to look when Splunk misbehaves: _internal, btool, and the monitoring console."
+        prompt: |
+          I'm finishing my Splunk learning path with admin survival skills. Teach me two things:
+
+          A) Access control:
+          1) Users, roles, capabilities — and how index access is restricted per role.
+          2) Walk me through creating a "readonly_practice" role in my sandbox that can only
+             search the practice index, plus a test user with that role. Step by step, wait for me.
+
+          B) Troubleshooting Splunk itself:
+          3) index=_internal as the first stop — which sourcetypes matter (splunkd, scheduler) and
+             one example search for finding errors.
+          4) btool: what "splunk btool props list --debug" answers (which config file wins).
+          5) The Monitoring Console in two sentences.
+          Then give me 2 troubleshooting scenarios one at a time and have me say where I'd look first.
+        quiz_prompt: |
+          Quiz me on Splunk admin basics: 4 questions one at a time — one role-design scenario,
+          one "where do you look first" scenario, one btool question. Grade my answers.
+        practice: "Create the readonly role and test user, log in as the test user in a private window, and confirm they can search practice but not _internal."

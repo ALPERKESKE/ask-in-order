@@ -1,0 +1,43 @@
+---
+import Base from '../layouts/Base.astro';
+import { loadTopics, stepCount } from '../lib/topics.js';
+
+const topics = loadTopics();
+---
+<Base>
+  <section class="hero">
+    <h1>Learn anything with the AI you already use.</h1>
+    <p class="lead">
+      ChatGPT, Claude or Gemini can teach you almost anything — if you know
+      <em>what to ask, in what order</em>. Ask in Order gives you curated,
+      community-maintained question sequences. Pick a topic, copy each prompt
+      into your AI, and learn step by step.
+    </p>
+  </section>
+
+  <div class="topic-grid">
+    {topics.map((t) => (
+      <a class="card" href={`/topics/${t.id}/`}>
+        <h3>{t.title}</h3>
+        <p>{t.tagline}</p>
+        {t.status === 'ready'
+          ? <span class="badge ready">{stepCount(t)} steps · ready</span>
+          : <span class="badge skeleton">skeleton · contributions welcome</span>}
+      </a>
+    ))}
+  </div>
+
+  <section class="prose" style="margin-top:3.5rem">
+    <h2>How it works</h2>
+    <p>
+      Every learning path is an ordered list of steps. Each step has a clear
+      goal, a carefully engineered prompt that turns your AI into a tutor
+      (it explains, then quizzes you), and a hands-on practice task. Your
+      progress is saved in your browser — no account needed.
+    </p>
+    <p class="note">
+      Paths are plain YAML files in an open-source repo. Think a question
+      should come earlier? A prompt could be better? Open a pull request.
+    </p>
+  </section>
+</Base>

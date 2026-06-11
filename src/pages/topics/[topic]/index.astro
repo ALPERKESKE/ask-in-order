@@ -1,0 +1,61 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { loadTopics, stepCount } from '../../../lib/topics.js';
+
+export function getStaticPaths() {
+  return loadTopics().map((t) => ({ params: { topic: t.id }, props: { t } }));
+}
+
+const { t } = Astro.props;
+const total = stepCount(t);
+---
+<Base title={t.title} description={t.tagline}>
+  <p class="crumbs"><a href="/">Topics</a> / {t.title}</p>
+  <section class="hero">
+    <h1>{t.title}</h1>
+    <p class="lead">{t.tagline}</p>
+    {t.status !== 'ready' && (
+      <p class="badge skeleton">
+        This path is a skeleton — the outline exists, the steps need authors. Contributions welcome.
+      </p>
+    )}
+    {total > 0 && (
+      <div class="progress">
+        <span data-progress-label data-topic={t.id} data-total={total}>0 / {total} steps completed</span>
+        <div class="bar"><span data-progress-bar></span></div>
+      </div>
+    )}
+  </section>
+
+  {t.modules.map((mod) => (
+    <section class="module">
+      <h2>{mod.title}</h2>
+      {mod.steps.length > 0 ? (
+        <ol class="steps">
+          {mod.steps.map((s) => (
+            <li data-step={`${t.id}/${s.slug}`}>
+              <a href={`/topics/${t.id}/${s.slug}/`}>{s.title}</a>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <div class="empty">No steps yet — this module is waiting for a contributor.</div>
+      )}
+    </section>
+  ))}
+
+  <script>
+    const done = JSON.parse(localStorage.getItem('aio-done') || '{}');
+    let count = 0;
+    document.querySelectorAll('[data-step]').forEach((el) => {
+      if (done[el.dataset.step]) { el.classList.add('done'); count++; }
+    });
+    const label = document.querySelector('[data-progress-label]');
+    if (label) {
+      const total = Number(label.dataset.total);
+      label.textContent = `${count} / ${total} steps completed`;
+      const bar = document.querySelector('[data-progress-bar]');
+      if (bar && total > 0) bar.style.width = `${(count / total) * 100}%`;
+    }
+  </script>
+</Base>

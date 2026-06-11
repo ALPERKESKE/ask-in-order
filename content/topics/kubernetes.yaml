@@ -1,0 +1,16 @@
+id: kubernetes
+order: 2
+title: Kubernetes
+tagline: Containers at scale — pods, deployments, services, and running real workloads.
+status: skeleton
+modules:
+  - title: Foundations
+    steps: []
+  - title: Workloads — Pods, Deployments, Jobs
+    steps: []
+  - title: Networking — Services and Ingress
+    steps: []
+  - title: Configuration & Storage
+    steps: []
+  - title: Operations — Health, Scaling, Debugging
+    steps: []

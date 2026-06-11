@@ -1,0 +1,10 @@
+services:
+  ask-in-order:
+    build: .
+    container_name: ask-in-order
+    ports:
+      - "8085:80"
+    restart: unless-stopped
+    labels:
+      # locally built image — watchtower must not try to update it
+      - com.centurylinklabs.watchtower.enable=false

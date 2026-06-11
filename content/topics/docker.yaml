@@ -1,0 +1,16 @@
+id: docker
+order: 3
+title: Docker
+tagline: From "it works on my machine" to images, containers, compose and production habits.
+status: skeleton
+modules:
+  - title: Foundations — Images and Containers
+    steps: []
+  - title: Building Images — Dockerfile
+    steps: []
+  - title: Docker Compose
+    steps: []
+  - title: Networking & Volumes
+    steps: []
+  - title: Production Habits
+    steps: []

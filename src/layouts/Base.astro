@@ -1,0 +1,35 @@
+---
+import '../styles/global.css';
+const { title, description = 'Curated question sequences for learning with the AI you already use.' } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title ? `${title} · Ask in Order` : 'Ask in Order'}</title>
+  </head>
+  <body>
+    <header class="site">
+      <div class="container">
+        <a class="brand" href="/">ask <span class="order">in order</span></a>
+        <nav class="main">
+          <a href="/">Topics</a>
+          <a href="/contribute/">Contribute</a>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <div class="container">
+        <slot />
+      </div>
+    </main>
+    <footer class="site">
+      <div class="container">
+        Ask in Order — open-source learning paths for the AI era. MIT licensed.
+      </div>
+    </footer>
+  </body>
+</html>

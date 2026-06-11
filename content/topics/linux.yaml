@@ -1,0 +1,16 @@
+id: linux
+order: 4
+title: Linux
+tagline: Command line confidence — files, processes, services, networking and shell scripting.
+status: skeleton
+modules:
+  - title: Shell Basics
+    steps: []
+  - title: Files, Permissions, Users
+    steps: []
+  - title: Processes & systemd Services
+    steps: []
+  - title: Networking Essentials
+    steps: []
+  - title: Shell Scripting
+    steps: []

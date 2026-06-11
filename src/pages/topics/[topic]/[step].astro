@@ -1,0 +1,117 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { loadTopics, flatSteps } from '../../../lib/topics.js';
+
+export function getStaticPaths() {
+  return loadTopics().flatMap((t) =>
+    flatSteps(t).map((entry) => ({
+      params: { topic: t.id, step: entry.step.slug },
+      props: { t, ...entry },
+    }))
+  );
+}
+
+const { t, step, module: mod, index, total, prev, next } = Astro.props;
+const stepKey = `${t.id}/${step.slug}`;
+---
+<Base title={`${step.title} — ${t.title}`} description={step.goal}>
+  <p class="crumbs">
+    <a href="/">Topics</a> / <a href={`/topics/${t.id}/`}>{t.title}</a> / {step.title}
+  </p>
+
+  <p class="step-meta">{mod.title} · step {index + 1} of {total}</p>
+  <h1>{step.title}</h1>
+
+  <div class="box goal">
+    <h2>Goal — what you'll know after this step</h2>
+    <p>{step.goal}</p>
+  </div>
+
+  <div class="prompt">
+    <div class="head">
+      <span>Ask your AI — copy &amp; paste into ChatGPT, Claude or Gemini</span>
+      <button class="copy" data-copy>Copy</button>
+    </div>
+    <pre data-prompt-text>{step.prompt.trim()}</pre>
+  </div>
+
+  {step.quiz_prompt && (
+    <div class="prompt">
+      <div class="head">
+        <span>Then test yourself — paste this when you're done</span>
+        <button class="copy" data-copy>Copy</button>
+      </div>
+      <pre data-prompt-text>{step.quiz_prompt.trim()}</pre>
+    </div>
+  )}
+
+  {step.practice && (
+    <div class="box">
+      <h2>Hands-on practice</h2>
+      <p>{step.practice}</p>
+    </div>
+  )}
+
+  <button class="mark" data-mark data-step-key={stepKey}>Mark step as completed</button>
+
+  <div class="step-nav">
+    <span>{prev && <a href={`/topics/${t.id}/${prev.slug}/`}>← {prev.title}</a>}</span>
+    <span>{next
+      ? <a href={`/topics/${t.id}/${next.slug}/`}>{next.title} →</a>
+      : <a href={`/topics/${t.id}/`}>Back to path overview ✓</a>}</span>
+  </div>
+
+  <div class="box" style="margin-top:3rem">
+    <h2>Discussion</h2>
+    <p class="note">
+      Comments (via giscus / GitHub Discussions) will appear here once the
+      repository is public. Found a better prompt for this step? That's
+      exactly what belongs in the discussion — or straight into a pull request.
+    </p>
+  </div>
+
+  <script>
+    // Copy buttons — clipboard API needs a secure context, so fall back to
+    // execCommand for plain-HTTP LAN hosting.
+    function copyText(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(text);
+      }
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      return Promise.resolve();
+    }
+    document.querySelectorAll('[data-copy]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const pre = btn.closest('.prompt').querySelector('[data-prompt-text]');
+        copyText(pre.textContent).then(() => {
+          btn.textContent = 'Copied!';
+          setTimeout(() => (btn.textContent = 'Copy'), 1500);
+        });
+      });
+    });
+
+    // Progress (localStorage, no account)
+    const markBtn = document.querySelector('[data-mark]');
+    const key = markBtn.dataset.stepKey;
+    const load = () => JSON.parse(localStorage.getItem('aio-done') || '{}');
+    function render(done) {
+      const isDone = !!done[key];
+      markBtn.classList.toggle('is-done', isDone);
+      markBtn.textContent = isDone ? '✓ Completed — click to undo' : 'Mark step as completed';
+    }
+    markBtn.addEventListener('click', () => {
+      const done = load();
+      if (done[key]) delete done[key]; else done[key] = Date.now();
+      localStorage.setItem('aio-done', JSON.stringify(done));
+      render(done);
+    });
+    render(load());
+  </script>
+</Base>

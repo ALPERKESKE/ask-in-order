@@ -1,0 +1,54 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Contribute">
+  <section class="hero">
+    <h1>Contribute a question — or a whole path</h1>
+    <p class="lead">
+      Every learning path on this site is a plain YAML file. No CMS, no
+      database: if you can edit a text file, you can improve a path.
+    </p>
+  </section>
+
+  <section class="prose">
+    <h2>What a step looks like</h2>
+    <pre><code>- slug: stats-essentials
+  title: "Aggregating with stats"
+  goal: "Use stats to count, sum and average events by field."
+  prompt: |
+    I'm learning Splunk step by step. So far I know how to search
+    and work with fields. Act as my instructor and teach me the
+    stats command... At the end, quiz me with 3 questions, one at
+    a time, and wait for my answers.
+  quiz_prompt: |
+    Quiz me on the Splunk stats command — 5 questions, one at a
+    time. Grade each answer and explain what I missed.
+  practice: "Run a stats count by sourcetype on your own data."</code></pre>
+
+    <h2>Ways to contribute</h2>
+    <p>
+      <strong>Improve a prompt</strong> — found a phrasing that gets better
+      answers from the AI? Edit the step and open a pull request.<br />
+      <strong>Reorder steps</strong> — think concept B must come before
+      concept A? PRs that change ordering should explain why in the
+      description.<br />
+      <strong>Fill a skeleton</strong> — Kubernetes, Docker and Linux are
+      outlined but unwritten. Pick a module and write its steps.<br />
+      <strong>Propose a new topic</strong> — add a new YAML file under
+      <code>content/topics/</code>.
+    </p>
+
+    <h2>Ground rules</h2>
+    <p>
+      Prompts must give the AI a tutor role (explain → quiz → wait for
+      answers), must carry context ("so far I know…"), and must stay
+      vendor-neutral — they should work in ChatGPT, Claude and Gemini alike.
+      Ordering disputes are settled by maintainers after discussion in the PR.
+    </p>
+
+    <p class="note">
+      The GitHub repository link will appear here when the project goes
+      public. For now the project lives on its author's home server.
+    </p>
+  </section>
+</Base>
