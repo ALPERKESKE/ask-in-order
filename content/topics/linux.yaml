@@ -8,6 +8,7 @@ modules:
   - title: Shell Basics
     steps:
       - slug: what-is-the-shell
+        id: bX96pKn0RNVe
         title: "What the shell actually is"
         goal: "Explain what a shell is, how it differs from the terminal and the kernel, and what happens when you type a command and press Enter."
         prompt: |
@@ -26,6 +27,7 @@ modules:
           answer briefly before the next.
         practice: "Open a terminal and run `echo $SHELL`, `whoami`, and `hostname`, then read your prompt aloud and name each part."
       - slug: navigating-the-filesystem
+        id: umDWbtWe8JVk
         title: "Moving around the filesystem"
         goal: "Navigate directories confidently using pwd, ls, cd, and absolute vs relative paths."
         prompt: |
@@ -42,6 +44,7 @@ modules:
           Grade each answer.
         practice: "Starting from your home directory, cd into /etc, run ls -la, then return home using `cd -`."
       - slug: getting-help
+        id: qiaHEzDloSjK
         title: "Getting help on any command"
         goal: "Find out what any command does and which options it takes, using man, --help, and apropos."
         prompt: |
@@ -58,6 +61,7 @@ modules:
           Grade each answer briefly.
         practice: "Run `man ls`, find what the `-S` option does by searching inside the page, then quit."
       - slug: pipes-and-redirection
+        id: pNeMvNIW33I2
         title: "Pipes and redirection"
         goal: "Combine commands with pipes and send output to files using >, >>, and 2>."
         prompt: |
@@ -74,6 +78,7 @@ modules:
           Grade each answer.
         practice: "Run `ls /etc | grep conf | wc -l` and explain out loud what each of the three stages did."
       - slug: finding-files-and-text
+        id: b7Poe8sofv2f
         title: "Finding files and searching text"
         goal: "Locate files with find and search inside files with grep, including basic patterns."
         prompt: |
@@ -92,6 +97,7 @@ modules:
   - title: Files, Permissions, Users
     steps:
       - slug: creating-and-managing-files
+        id: rjRlcjhFxhlU
         title: "Creating, copying, moving, deleting"
         goal: "Manage files and directories with touch, mkdir, cp, mv, rm and understand the danger of rm -rf."
         prompt: |
@@ -108,6 +114,7 @@ modules:
           Grade each answer.
         practice: "Create a folder `playground` with `mkdir -p playground/sub`, copy a file into it, move it, then delete the whole folder with `rm -r`."
       - slug: understanding-permissions
+        id: qfD6LyxStCvs
         title: "Reading file permissions"
         goal: "Read the rwx permission string from ls -l and explain owner, group, and others."
         prompt: |
@@ -125,6 +132,7 @@ modules:
           Grade each answer.
         practice: "Run `ls -l /etc/passwd /bin/ls` and decode each permission string out loud (owner/group/others)."
       - slug: changing-permissions
+        id: uRWdNP3OX1ad
         title: "Changing permissions and ownership"
         goal: "Modify permissions with chmod (symbolic and numeric) and ownership with chown."
         prompt: |
@@ -141,6 +149,7 @@ modules:
           Grade each answer.
         practice: "Create a file, give it mode 600 with `chmod 600`, verify with ls -l, then change it to 644 and verify again."
       - slug: users-and-sudo
+        id: j6RmXWzBpljE
         title: "Users, root, and sudo"
         goal: "Explain the root user, the principle of least privilege, and how sudo works."
         prompt: |
@@ -157,6 +166,7 @@ modules:
           Grade each answer.
         practice: "Run `whoami`, then `id` to see your groups, then run any harmless command with `sudo` (e.g. `sudo ls /root`) and observe the password prompt."
       - slug: links-and-disk-usage
+        id: zqvTA5dMS4S9
         title: "Links and disk usage"
         goal: "Understand symbolic links and inspect disk usage with df and du."
         prompt: |
@@ -174,6 +184,7 @@ modules:
   - title: Processes & systemd Services
     steps:
       - slug: viewing-processes
+        id: mSljdDr6xnyy
         title: "Viewing running processes"
         goal: "List and inspect running processes with ps, top/htop, and understand PIDs."
         prompt: |
@@ -190,6 +201,7 @@ modules:
           Grade each answer.
         practice: "Run `top` and identify the process using the most CPU, then quit, then find its PID with `ps aux | grep`."
       - slug: managing-processes
+        id: savhRYvIbufI
         title: "Stopping and signaling processes"
         goal: "Terminate processes with kill, kill -9, and pkill, and understand foreground/background and jobs."
         prompt: |
@@ -205,6 +217,7 @@ modules:
           Grade each answer.
         practice: "Start a long-running command like `sleep 300 &`, find it with `jobs` and `ps`, then terminate it with `kill`."
       - slug: what-is-systemd
+        id: m5abFFbn6JiC
         title: "What systemd and services are"
         goal: "Explain what systemd is, what a service (unit) is, and why background programs run as services."
         prompt: |
@@ -221,6 +234,7 @@ modules:
           Grade each answer.
         practice: "Run `systemctl list-units --type=service --state=running` and pick one service you recognize; note its name for the next step."
       - slug: controlling-services
+        id: mNOfMsFbPlZz
         title: "Controlling services with systemctl"
         goal: "Start, stop, enable, disable, and check the status of services using systemctl."
         prompt: |
@@ -238,6 +252,7 @@ modules:
           Grade each answer.
         practice: "Run `systemctl status` on a service you found earlier (e.g. `systemctl status ssh`) and identify whether it is active and enabled."
       - slug: reading-logs
+        id: uaSKcTpmyYYt
         title: "Reading logs with journalctl"
         goal: "Inspect system and service logs using journalctl, including filtering and following live output."
         prompt: |
@@ -256,6 +271,7 @@ modules:
   - title: Networking Essentials
     steps:
       - slug: network-basics
+        id: sC8mi8NaXKTI
         title: "IP addresses, ports, and DNS"
         goal: "Explain IP addresses, ports, and DNS at a practical level and inspect your own interfaces with ip."
         prompt: |
@@ -272,6 +288,7 @@ modules:
           Grade each answer.
         practice: "Run `ip addr` and find your machine's IP address on its main interface; note whether it's a private (192.168 / 10.x) address."
       - slug: testing-connectivity
+        id: yUeXae5mVjcK
         title: "Testing connectivity"
         goal: "Diagnose network reachability with ping, and resolve names with the DNS tools dig/host."
         prompt: |
@@ -288,6 +305,7 @@ modules:
           Grade each answer.
         practice: "Ping 8.8.8.8 a few times and read the latency, then run `dig` or `host` on a website and find the IP it returns."
       - slug: ports-and-connections
+        id: j2MgpMBbEqOC
         title: "Seeing open ports and connections"
         goal: "Discover which ports are listening and which programs use them with ss and lsof."
         prompt: |
@@ -304,6 +322,7 @@ modules:
           Grade each answer.
         practice: "Run `ss -tulpn` (with sudo if needed) and identify one listening port and the program behind it."
       - slug: transferring-and-fetching
+        id: thr27lPwpvCS
         title: "Fetching and transferring data"
         goal: "Download from URLs with curl/wget and copy files between machines with scp."
         prompt: |
@@ -319,6 +338,7 @@ modules:
           Grade each answer.
         practice: "Use `curl -I` against a website and read the status line and headers, then download a small file with either curl -O or wget."
       - slug: ssh-essentials
+        id: ykUcLsHJRAwG
         title: "Connecting with SSH"
         goal: "Log into remote machines with ssh and understand the basics of key-based authentication."
         prompt: |
@@ -337,6 +357,7 @@ modules:
   - title: Shell Scripting
     steps:
       - slug: first-shell-script
+        id: paO7Cy3BNMrg
         title: "Writing your first script"
         goal: "Create, make executable, and run a basic bash script with a shebang line."
         prompt: |
@@ -353,6 +374,7 @@ modules:
           Grade each answer.
         practice: "Write a `hello.sh` with a shebang that echoes a greeting and the output of `date`, chmod +x it, and run it with ./hello.sh."
       - slug: variables-and-input
+        id: m52f3MrP5gZS
         title: "Variables and user input"
         goal: "Use variables, command substitution, and read user input in a script."
         prompt: |
@@ -369,6 +391,7 @@ modules:
           Grade each answer.
         practice: "Write a script that reads a name with `read` (or takes it as $1) and prints a greeting plus today's date captured via $(date)."
       - slug: conditionals
+        id: sFSjv7EEEgZm
         title: "Conditionals and tests"
         goal: "Make decisions in scripts with if/elif/else and the test operators for files and strings."
         prompt: |
@@ -386,6 +409,7 @@ modules:
           Grade each answer.
         practice: "Write a script that takes a filename as $1 and prints whether it exists (use `[ -e \"$1\" ]`), testing it on a real file and a fake one."
       - slug: loops
+        id: j3sqGgZjC4Xs
         title: "Loops"
         goal: "Repeat actions with for and while loops over lists and files."
         prompt: |
@@ -402,6 +426,7 @@ modules:
           Grade each answer.
         practice: "Write a for loop that prints each .txt file in a directory along with its line count using wc -l."
       - slug: robust-scripts
+        id: gDqEaOuu8Wcm
         title: "Writing robust, safe scripts"
         goal: "Make scripts safer and more reliable with set -euo pipefail, quoting, exit codes, and basic functions."
         prompt: |

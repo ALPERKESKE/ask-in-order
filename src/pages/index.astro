@@ -1,7 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import Discussion from '../components/Discussion.astro';
-import { loadTopics, stepCount, firstExample } from '../lib/topics.js';
+import { loadTopics, stepCount, stepIds, firstExample } from '../lib/topics.js';
 
 const topics = loadTopics();
 const ex = firstExample(topics);
@@ -27,10 +27,10 @@ const exPrompt = ex
         <h3>{t.title}</h3>
         <p>{t.tagline}</p>
         {t.status === 'ready'
-          ? <span class="badge ready" data-card-badge data-topic={t.id} data-total={stepCount(t)}>{stepCount(t)} steps · ready</span>
+          ? <span class="badge ready" data-card-badge data-ids={stepIds(t).join(',')}>{stepCount(t)} steps · ready</span>
           : <span class="badge skeleton">skeleton · contributions welcome</span>}
         {t.status === 'ready' && (
-          <div class="card-bar" hidden data-card-bar data-topic={t.id} data-total={stepCount(t)}><span></span></div>
+          <div class="card-bar" hidden data-card-bar data-ids={stepIds(t).join(',')}><span></span></div>
         )}
       </a>
     ))}
@@ -76,21 +76,21 @@ const exPrompt = ex
 
   <script>
     // Show per-topic progress on the cards for returning visitors.
+    // Keys are immutable step ids; each card carries its topic's id list.
     const done = JSON.parse(localStorage.getItem('aio-done') || '{}');
-    const countFor = (topic) =>
-      Object.keys(done).filter((k) => done[k] && k.startsWith(topic + '/')).length;
+    const countIn = (ids) => ids.filter((id) => done[id]).length;
 
     for (const badge of document.querySelectorAll('[data-card-badge]')) {
-      const c = countFor(badge.dataset.topic);
-      const total = Number(badge.dataset.total);
-      if (c > 0) badge.textContent = `${c} / ${total} done`;
+      const ids = badge.dataset.ids ? badge.dataset.ids.split(',') : [];
+      const c = countIn(ids);
+      if (c > 0) badge.textContent = `${c} / ${ids.length} done`;
     }
     for (const wrap of document.querySelectorAll('[data-card-bar]')) {
-      const c = countFor(wrap.dataset.topic);
-      const total = Number(wrap.dataset.total);
-      if (c > 0 && total > 0) {
+      const ids = wrap.dataset.ids ? wrap.dataset.ids.split(',') : [];
+      const c = countIn(ids);
+      if (c > 0 && ids.length > 0) {
         wrap.hidden = false;
-        wrap.querySelector('span').style.width = `${(c / total) * 100}%`;
+        wrap.querySelector('span').style.width = `${(c / ids.length) * 100}%`;
       }
     }
   </script>

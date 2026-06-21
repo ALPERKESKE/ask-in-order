@@ -25,6 +25,11 @@ export function stepCount(topic) {
   return topic.modules.reduce((n, m) => n + m.steps.length, 0);
 }
 
+// Immutable ids of every step in a topic — the stable join keys (progress, giscus).
+export function stepIds(topic) {
+  return topic.modules.flatMap((m) => m.steps.map((s) => s.id));
+}
+
 // First real step of the first "ready" topic — used as a live example on the homepage.
 export function firstExample(topics) {
   for (const t of topics) {

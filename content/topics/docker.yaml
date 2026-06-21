@@ -8,6 +8,7 @@ modules:
   - title: Foundations — Images and Containers
     steps:
       - slug: what-problem-docker-solves
+        id: quApfXSfxZau
         title: "What problem Docker actually solves"
         goal: "Explain in your own words what Docker does, the 'works on my machine' problem it solves, and how a container differs from a virtual machine."
         prompt: |
@@ -23,6 +24,7 @@ modules:
           ("a team has bugs that only appear on the test server — could Docker help, why?"). Grade each answer briefly before the next.
         practice: "Install Docker (Docker Desktop or Docker Engine) and run `docker run hello-world`; read the output it prints."
       - slug: images-vs-containers
+        id: oovO4tnE1j0L
         title: "Images vs containers"
         goal: "Clearly distinguish an image (the blueprint) from a container (a running instance), and describe their lifecycle."
         prompt: |
@@ -38,6 +40,7 @@ modules:
           ("I removed a container — is the image gone too?"). Grade each answer briefly.
         practice: "Run `docker run -it ubuntu bash`, create a file inside it, exit, then start a fresh ubuntu container and confirm the file is NOT there."
       - slug: docker-hub-and-tags
+        id: q00jTOrMyKoG
         title: "Registries, Docker Hub and image tags"
         goal: "Understand where images come from, how `image:tag` naming works, and why `latest` is risky."
         prompt: |
@@ -53,6 +56,7 @@ modules:
           ("two machines ran `docker pull myapp:latest` a month apart and behave differently — why?"). Grade each briefly.
         practice: "Pull two specific tags of the same image (e.g. `python:3.11-slim` and `python:3.12-slim`) and compare their sizes with `docker images`."
       - slug: core-container-commands
+        id: fzIPfnPBMlR2
         title: "The commands you'll use every day"
         goal: "Run, list, inspect, log into, stop and remove containers fluently with the core CLI commands."
         prompt: |
@@ -70,6 +74,7 @@ modules:
   - title: Building Images — Dockerfile
     steps:
       - slug: first-dockerfile
+        id: aYD2PaFFdwYj
         title: "Your first Dockerfile"
         goal: "Write a minimal Dockerfile and build it into an image you can run."
         prompt: |
@@ -85,6 +90,7 @@ modules:
           ("what's the difference between RUN and CMD, and which runs at build time?"). Grade each answer.
         practice: "Create a folder with a tiny web app and a Dockerfile, run `docker build -t myapp .`, then `docker run -p 8080:80 myapp` (or the app's port) and load it in a browser."
       - slug: layers-and-caching
+        id: kfgJdkwsKz1s
         title: "Layers and build caching"
         goal: "Explain how each Dockerfile instruction creates a layer, how the build cache works, and how to order instructions for fast rebuilds."
         prompt: |
@@ -100,6 +106,7 @@ modules:
           ("I changed one line of source code and the whole npm install re-ran — why, and how do I fix the Dockerfile?"). Grade each answer.
         practice: "Take a Dockerfile, build it, change one source file, rebuild, and watch which steps say CACHED; then reorder dependency install above the source COPY and rebuild to see the difference."
       - slug: dockerignore-and-context
+        id: dPJhgF5mc2PV
         title: "Build context and .dockerignore"
         goal: "Understand what the build context is and use .dockerignore to keep builds small and fast."
         prompt: |
@@ -115,6 +122,7 @@ modules:
           ("my image is 1.5 GB and includes my local .git folder — what went wrong?"). Grade each answer.
         practice: "Add a `.dockerignore` that excludes `.git`, `node_modules`, and any local env files, rebuild, and confirm the image got smaller and the build was faster."
       - slug: multi-stage-builds
+        id: bzObgQfdpeui
         title: "Multi-stage builds for small images"
         goal: "Use a multi-stage build to compile/build in one stage and ship only the artifact in a tiny final stage."
         prompt: |
@@ -130,6 +138,7 @@ modules:
           ("my final image still contains gcc and the full source — how should I restructure the Dockerfile?"). Grade each answer.
         practice: "Convert a single-stage Dockerfile to multi-stage, build both, and compare image sizes with `docker images`."
       - slug: tagging-and-pushing
+        id: thqUE6OE0IeI
         title: "Tagging and pushing your image"
         goal: "Tag an image with a registry path and version, and push it so others (or a server) can pull it."
         prompt: |
@@ -147,6 +156,7 @@ modules:
   - title: Docker Compose
     steps:
       - slug: why-compose
+        id: r3hKFlPfCXP5
         title: "Why Compose exists"
         goal: "Explain why running multi-container apps by hand is painful and how a compose file declares the whole stack."
         prompt: |
@@ -162,6 +172,7 @@ modules:
           ("a new teammate needs the full app stack running locally — how does Compose help vs a README of docker run commands?"). Grade each answer.
         practice: "Pick a sample multi-service project (or just nginx + a small app) and sketch in plain notes which services it would have before writing any YAML."
       - slug: writing-a-compose-file
+        id: o2mot67ATqYJ
         title: "Writing a compose file"
         goal: "Write a compose.yaml with two services and bring it up with one command."
         prompt: |
@@ -177,6 +188,7 @@ modules:
           ("my web service can't connect to the db at `localhost` — what hostname should it use instead and why?"). Grade each answer.
         practice: "Write a compose.yaml with a web service and a Postgres (or MySQL) service, run `docker compose up -d`, and confirm both are running with `docker compose ps`."
       - slug: env-and-config
+        id: m3SnQeVP4DeO
         title: "Environment variables and configuration"
         goal: "Configure services with environment variables and a .env file instead of hardcoding values."
         prompt: |
@@ -192,6 +204,7 @@ modules:
           ("a teammate accidentally committed the database password in compose.yaml — what should change?"). Grade each answer.
         practice: "Move a hardcoded password from your compose.yaml into a gitignored `.env` file, reference it with `${DB_PASSWORD}`, and confirm the stack still comes up."
       - slug: compose-rebuild-workflow
+        id: kIED5sMJ4ufO
         title: "The everyday Compose workflow"
         goal: "Develop with Compose smoothly: rebuild on changes, view logs, exec into containers, and tear down cleanly."
         prompt: |
@@ -209,6 +222,7 @@ modules:
   - title: Networking & Volumes
     steps:
       - slug: container-networking-basics
+        id: nnpI25jlAa2w
         title: "How containers talk to each other"
         goal: "Explain Docker networks, why containers on the same user-defined network reach each other by name, and how published ports work."
         prompt: |
@@ -224,6 +238,7 @@ modules:
           ("my app container connects to `db:5432` and it works in Compose but fails with two manual `docker run` commands — why?"). Grade each answer.
         practice: "Create a user-defined network with `docker network create demo`, run two containers on it, and ping one from the other by name with `docker exec`."
       - slug: persisting-data-volumes
+        id: eZEsVLwNA94z
         title: "Persisting data with volumes"
         goal: "Understand why container filesystems are ephemeral and use named volumes to keep data across container restarts."
         prompt: |
@@ -239,6 +254,7 @@ modules:
           ("I recreated my database container and all my data vanished — what was missing?"). Grade each answer.
         practice: "Run a Postgres container with a named volume, create a table and row, remove and recreate the container with the same volume, and confirm the data is still there."
       - slug: bind-mounts-vs-volumes
+        id: n3H2ScLcHDjD
         title: "Bind mounts vs named volumes"
         goal: "Choose correctly between bind mounts (host path) and named volumes (Docker-managed) for dev vs production."
         prompt: |
@@ -254,6 +270,7 @@ modules:
           ("on the server my container can't write to a bind-mounted folder — permission denied — what's likely happening?"). Grade each answer.
         practice: "Set up the same service twice: once with a bind mount to a host folder and once with a named volume, write a file in each, and inspect where the data ends up on the host."
       - slug: networking-volumes-in-compose
+        id: embZx7WrUZ7U
         title: "Networks and volumes in Compose"
         goal: "Declare named volumes and custom networks in a compose file and wire services to them."
         prompt: |
@@ -271,6 +288,7 @@ modules:
   - title: Production Habits
     steps:
       - slug: smaller-safer-images
+        id: fwzDcDwMKze3
         title: "Smaller, safer base images"
         goal: "Pick lean base images, pin versions, and reduce image size and attack surface deliberately."
         prompt: |
@@ -286,6 +304,7 @@ modules:
           ("my alpine-based image crashes with a weird library error that didn't happen on the slim image — what's a likely cause?"). Grade each answer.
         practice: "Take an existing image, rebuild it on a `-slim` and an `alpine` base where feasible, and compare sizes and whether the app still runs."
       - slug: running-as-non-root
+        id: elgcJOGcQbfz
         title: "Don't run as root; healthchecks"
         goal: "Run containers as a non-root user and add a healthcheck so the platform knows when the app is actually ready."
         prompt: |
@@ -301,6 +320,7 @@ modules:
           ("my web service starts before the database is ready and crashes on boot — how do healthchecks + depends_on fix this?"). Grade each answer.
         practice: "Add a non-root `USER` and a `HEALTHCHECK` to a Dockerfile, rebuild, run it, and confirm the container shows `(healthy)` in `docker ps`."
       - slug: logs-and-debugging
+        id: kmI2VcIIaTYY
         title: "Logs, debugging and resource limits"
         goal: "Diagnose a misbehaving container with logs, exec, inspect and stats, and cap its memory/CPU."
         prompt: |
@@ -316,6 +336,7 @@ modules:
           ("a container keeps restarting and getting OOM-killed — which commands do you run and what limit do you set?"). Grade each answer.
         practice: "Run a container with `--memory=256m`, watch it in `docker stats`, then deliberately stress it (or just observe) and read its logs and `docker inspect` output."
       - slug: restart-policies-and-deploy
+        id: v7kR3YVjPZrH
         title: "Restart policies and deploying a stack"
         goal: "Use restart policies so containers survive crashes/reboots, and run a Compose stack durably on a server."
         prompt: |

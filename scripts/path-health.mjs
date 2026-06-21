@@ -47,10 +47,12 @@ function loadSteps() {
     if (!d?.id) continue;
     topics.add(d.id);
     for (const m of d.modules ?? [])
-      for (const s of m.steps ?? [])
-        keys.set(`${d.id}/${s.slug}`, {
-          topic: d.id, slug: s.slug, title: s.title, revised: s.revised ?? null,
+      for (const s of m.steps ?? []) {
+        if (!s.id) { console.error(`⚠ step ${d.id}/${s.slug} has no immutable id — skipped`); continue; }
+        keys.set(s.id, {
+          id: s.id, topic: d.id, slug: s.slug, title: s.title, revised: s.revised ?? null,
         });
+      }
   }
   return { keys, topics };
 }
@@ -124,16 +126,16 @@ for (const disc of discussions) {
   else orphanDiscussions.push(disc);
 }
 
-// associate open PRs/Issues to step keys (path → topic, and substring scan)
-function workForKey(key, topic) {
+// associate open PRs/Issues to a step (path → topic, plus id/slug substring scan)
+function workForStep(meta) {
+  const tokens = [meta.id, `${meta.topic}/${meta.slug}`, meta.slug];
+  const mentions = (text) => tokens.some((t) => text.includes(t));
   const prs = pullRequests.nodes.filter((pr) => {
     const touchesTopic = pr.files.nodes.some((f) =>
-      f.path === `content/topics/${topic}.yaml`);
-    const mentions = `${pr.title}\n${pr.body ?? ''}`.includes(key);
-    return touchesTopic || mentions;
+      f.path === `content/topics/${meta.topic}.yaml`);
+    return touchesTopic || mentions(`${pr.title}\n${pr.body ?? ''}`);
   });
-  const iss = issues.nodes.filter((i) =>
-    `${i.title}\n${i.body ?? ''}`.includes(key));
+  const iss = issues.nodes.filter((i) => mentions(`${i.title}\n${i.body ?? ''}`));
   return { prs, iss };
 }
 
@@ -145,7 +147,7 @@ for (const [key, meta] of keys) {
   const commentNodes = disc ? disc.comments.nodes : [];
   const comments = disc ? disc.comments.totalCount : 0;
   const negativeComments = commentNodes.filter((c) => NEG.test(c.body || '')).length;
-  const { prs, iss } = workForKey(key, meta.topic);
+  const { prs, iss } = workForStep(meta);
 
   // weighting (designed): PR > textual comment > reactions
   const reasons = [];
@@ -162,8 +164,9 @@ for (const [key, meta] of keys) {
     if (down > up) reasons.push(`${down}👎/${up}👍 (low volume — prioritise only)`);
   }
 
-  records.push({ key, title: meta.title, status, up, down, comments,
-    negativeComments, openPRs: prs.length, openIssues: iss.length,
+  records.push({ key, label: `${meta.topic}/${meta.slug}`, title: meta.title,
+    status, up, down, comments, negativeComments,
+    openPRs: prs.length, openIssues: iss.length,
     revised: meta.revised, reasons, url: disc?.url ?? null });
 }
 
@@ -185,7 +188,7 @@ console.log(`\n  Path health · ${site.repo}`);
 console.log(`  ${records.length} steps · ${withSignal} with any signal · ${weak.length} weak · ${watch.length} watch\n`);
 
 const line = (r) => {
-  console.log(`  ${r.status === 'weak' ? '⚠ ' : '👀'} ${r.key}`);
+  console.log(`  ${r.status === 'weak' ? '⚠ ' : '👀'} ${r.label}  ·  id ${r.key}`);
   console.log(`     ${r.title}`);
   console.log(`     ${r.up}👍 ${r.down}👎 · ${r.comments} comment(s)${r.revised ? ` · revised ${r.revised}` : ''}`);
   if (r.reasons.length) console.log(`     → ${r.reasons.join(' · ')}`);

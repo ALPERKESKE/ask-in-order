@@ -13,7 +13,9 @@ export function getStaticPaths() {
 }
 
 const { t, step, module: mod, index, total, prev, next } = Astro.props;
-const stepKey = `${t.id}/${step.slug}`;
+// Immutable join key — used for giscus term and localStorage progress so a slug
+// rename never orphans comments/progress. URLs still use the human-readable slug.
+const stepKey = step.id;
 ---
 <Base title={`${step.title} — ${t.title}`} description={step.goal}>
   <div style={`--topic:${t.color}`}>

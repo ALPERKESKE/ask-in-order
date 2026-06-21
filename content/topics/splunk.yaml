@@ -8,6 +8,7 @@ modules:
   - title: Foundations
     steps:
       - slug: what-is-splunk
+        id: oimvxIT37v3m
         title: "What Splunk actually is"
         goal: "Explain in your own words what Splunk does, what problems it solves, and how it differs from a database or a monitoring tool."
         prompt: |
@@ -24,6 +25,7 @@ modules:
         practice: "Write one paragraph (anywhere — notes app is fine) describing a problem from your own work or home lab that Splunk could solve."
 
       - slug: core-concepts
+        id: lWb6IszhZ7Od
         title: "Events, indexes, sourcetypes — the data model"
         goal: "Know what an event, index, sourcetype, source and host are, and understand why Splunk applies schema at search time."
         prompt: |
@@ -40,6 +42,7 @@ modules:
         practice: "Sketch (on paper) how you'd organize three data sources — web server logs, Linux syslog, application JSON logs — into indexes and sourcetypes."
 
       - slug: set-up-a-sandbox
+        id: aMBWGbsJjS4Q
         title: "Set up your own Splunk sandbox"
         goal: "Have a running Splunk instance you can experiment in — Docker is the fastest route — and know what the free license does and doesn't allow."
         prompt: |
@@ -58,6 +61,7 @@ modules:
         practice: "Actually run the container, log in at http://localhost:8000, and find the search bar. Don't continue the path until this works."
 
       - slug: first-searches
+        id: f2nFFaRB4LNr
         title: "Your first searches"
         goal: "Run searches in the Search & Reporting app, use the time range picker, and explore Splunk's own _internal index as free sample data."
         prompt: |
@@ -77,6 +81,7 @@ modules:
   - title: SPL Fundamentals
     steps:
       - slug: search-language-basics
+        id: iVjfnXYSA91K
         title: "SPL building blocks: keywords, operators, pipes"
         goal: "Combine keywords, field=value pairs, AND/OR/NOT and wildcards, and understand the pipe as SPL's core idea."
         prompt: |
@@ -94,6 +99,7 @@ modules:
         practice: "On your sandbox, write one search combining a keyword, a field=value filter and NOT — and confirm the result set changes as you expect."
 
       - slug: working-with-fields
+        id: d63wevwDfkIg
         title: "Working with fields: table, rename, dedup"
         goal: "Shape raw events into readable output with fields, table, rename and dedup, and understand auto-extracted vs manual fields."
         prompt: |
@@ -110,6 +116,7 @@ modules:
         practice: "Build a deduplicated table of sourcetype, host and log_level from index=_internal."
 
       - slug: stats-essentials
+        id: cT8c0V2yUDzb
         title: "Aggregating with stats"
         goal: "Use stats with count, sum, avg, min/max, distinct_count and 'by' clauses — the single most important SPL command."
         prompt: |
@@ -128,6 +135,7 @@ modules:
         practice: "Find the top 5 noisiest sourcetypes in your _internal index by event count, using stats and sort — not the top command."
 
       - slug: sorting-top-rare
+        id: qvIafOPvJSyq
         title: "sort, top and rare"
         goal: "Order results with sort and get instant frequency analysis with top and rare — and know when to use them vs stats."
         prompt: |
@@ -142,6 +150,7 @@ modules:
         practice: "Use rare on the sourcetype field of _internal — does anything surprising show up at the bottom of your instance's activity?"
 
       - slug: eval-essentials
+        id: smG0Lntrfd26
         title: "Computing new fields with eval"
         goal: "Create calculated fields with eval: arithmetic, string functions, if() and case() conditionals."
         prompt: |
@@ -160,6 +169,7 @@ modules:
   - title: Intermediate SPL
     steps:
       - slug: timechart
+        id: uuDY6nxbumeG
         title: "Time series with timechart"
         goal: "Turn events into time series with timechart, control granularity with span, and split series with a by-field."
         prompt: |
@@ -176,6 +186,7 @@ modules:
         practice: "Chart your _internal event volume per sourcetype over the last 24 hours with a 1-hour span. Find your instance's quietest hour."
 
       - slug: eventstats-streamstats
+        id: eZ82QXIgXuXl
         title: "eventstats and streamstats"
         goal: "Add aggregate context to events without collapsing them (eventstats) and compute running/windowed values (streamstats)."
         prompt: |
@@ -192,6 +203,7 @@ modules:
         practice: "In _internal, find events whose _raw length is more than twice the average length for their sourcetype — this needs eventstats."
 
       - slug: lookups
+        id: oBZQSHofxqdZ
         title: "Enriching data with lookups"
         goal: "Create a CSV lookup, enrich search results with the lookup command, and know when automatic lookups make sense."
         prompt: |
@@ -209,6 +221,7 @@ modules:
         practice: "Create a CSV mapping your _internal sourcetypes to a friendly label and a category, upload it as a lookup, and enrich a stats result with it."
 
       - slug: subsearches-and-joins
+        id: yTmrh4kwAHbm
         title: "Subsearches, join — and why stats usually wins"
         goal: "Use subsearches and join when needed, know their hard limits, and recognize the stats-based patterns that replace them."
         prompt: |
@@ -230,6 +243,7 @@ modules:
   - title: Dashboards, Alerts & Reports
     steps:
       - slug: reports-saved-searches
+        id: mwPbIEaonvAg
         title: "Saved searches and reports"
         goal: "Save a search as a report, schedule it, and understand how scheduled searches are the engine behind dashboards and alerts."
         prompt: |
@@ -246,6 +260,7 @@ modules:
         practice: "Save a report 'Hourly event volume by sourcetype' on _internal and schedule it to run every hour."
 
       - slug: dashboards
+        id: hUfQkfB6CbEV
         title: "Building your first dashboard"
         goal: "Build a dashboard with several panels in Dashboard Studio, and use a time range input that all panels obey."
         prompt: |
@@ -265,6 +280,7 @@ modules:
         practice: "Add a fourth panel of your own choice to the dashboard. Anything — but you must write the SPL yourself."
 
       - slug: alerts
+        id: iuTceCbPOwuM
         title: "Alerts that don't cry wolf"
         goal: "Create a scheduled alert with a sensible trigger condition, choose alert actions, and use throttling to prevent alert spam."
         prompt: |
@@ -283,6 +299,7 @@ modules:
         practice: "Create an alert that fires when ERROR events in _internal exceed a threshold in 15 minutes, throttled to at most one notification per hour."
 
       - slug: search-performance
+        id: p3TDCXutpJBN
         title: "Why is my search slow?"
         goal: "Read the Job Inspector, and apply the core performance habits: tight time ranges, early filtering, fields over table, avoiding leading wildcards."
         prompt: |
@@ -303,6 +320,7 @@ modules:
   - title: Getting Data In
     steps:
       - slug: forwarders-and-inputs
+        id: eCobBm2qcd1m
         title: "Forwarders and file inputs"
         goal: "Understand the Universal Forwarder's role, and configure a file monitor input so a log file flows into a chosen index."
         prompt: |
@@ -322,6 +340,7 @@ modules:
         practice: "Create an index named practice, ingest any local log file into it with sourcetype=mylog, and confirm with index=practice that events arrived with sensible timestamps."
 
       - slug: http-event-collector
+        id: gcmBowRbqZ9t
         title: "HTTP Event Collector (HEC)"
         goal: "Enable HEC, create a token, and send events with curl — both the JSON /event endpoint and the /raw endpoint."
         prompt: |
@@ -338,6 +357,7 @@ modules:
         practice: "Create a HEC token and send 5 JSON events with curl carrying a custom field, then find them in search and confirm the field was extracted."
 
       - slug: parsing-and-onboarding
+        id: uJV4hTMfAwXn
         title: "Parsing: timestamps, line breaking, sourcetypes"
         goal: "Understand what props.conf controls at parse time — timestamp extraction, line breaking, sourcetype definitions — and recognize broken onboarding when you see it."
         prompt: |
@@ -359,6 +379,7 @@ modules:
   - title: Administration Basics
     steps:
       - slug: architecture-and-scaling
+        id: o5b5jcCZfDg9
         title: "Splunk architecture: from one box to clusters"
         goal: "Describe the roles (search head, indexer, forwarder), when a deployment splits into tiers, and what indexer clustering and search head clustering add."
         prompt: |
@@ -377,6 +398,7 @@ modules:
         practice: "Draw (paper is fine) the architecture you'd propose for a company ingesting 200 GB/day with 50 users — label every role and data flow."
 
       - slug: users-roles-troubleshooting
+        id: jBh8ZhUvxPsg
         title: "Users, roles, and troubleshooting Splunk itself"
         goal: "Create users and roles with index-level restrictions, and know the first places to look when Splunk misbehaves: _internal, btool, and the monitoring console."
         prompt: |

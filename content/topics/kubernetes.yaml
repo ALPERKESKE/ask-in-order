@@ -8,6 +8,7 @@ modules:
   - title: Foundations
     steps:
       - slug: what-is-kubernetes
+        id: e3E44FGukRh1
         title: "What Kubernetes actually is"
         goal: "Explain in your own words what Kubernetes does, the problem it solves beyond plain Docker, and when you do (and don't) need it."
         prompt: |
@@ -27,6 +28,7 @@ modules:
           Grade each answer briefly before the next.
         practice: "Write one paragraph describing a system (from work or a side project) and decide whether Kubernetes would help or be overkill, with one reason each way."
       - slug: cluster-anatomy
+        id: kw21jLr0bFHj
         title: "Cluster anatomy: control plane and nodes"
         goal: "Describe the main pieces of a Kubernetes cluster and what each one is responsible for, without memorizing internals."
         prompt: |
@@ -45,6 +47,7 @@ modules:
           Grade each answer briefly.
         practice: "Draw (on paper or a whiteboard app) a cluster with one control plane and two worker nodes, labeling the API server, etcd, scheduler, kubelet, and a couple of pods."
       - slug: local-sandbox
+        id: rivpke7x67do
         title: "Set up a local sandbox with kind or minikube"
         goal: "Get a working single-machine Kubernetes cluster running locally and confirm kubectl can talk to it."
         prompt: |
@@ -64,6 +67,7 @@ modules:
           Grade each answer briefly.
         practice: "Create a local cluster with kind, then run kubectl get nodes and confirm at least one node shows STATUS Ready."
       - slug: kubectl-and-yaml
+        id: sxnndVFqOzn0
         title: "kubectl and the declarative model"
         goal: "Use kubectl confidently for the core verbs and understand imperative vs. declarative (apply) workflows."
         prompt: |
@@ -84,6 +88,7 @@ modules:
   - title: Workloads — Pods, Deployments, Jobs
     steps:
       - slug: pods
+        id: toDumaxMJUx8
         title: "Pods: the smallest deployable unit"
         goal: "Explain what a pod is, why it isn't the same as a container, and run one from a YAML manifest."
         prompt: |
@@ -101,6 +106,7 @@ modules:
           Grade each answer briefly.
         practice: "Apply a single-container Pod manifest to your cluster, then use kubectl describe pod and kubectl logs to inspect it, and finally delete it."
       - slug: deployments
+        id: pHmgFQdiTaGn
         title: "Deployments: declarative, self-healing apps"
         goal: "Understand why you rarely create bare pods, and use a Deployment to run and self-heal multiple replicas."
         prompt: |
@@ -117,6 +123,7 @@ modules:
           Grade each answer briefly.
         practice: "Create a Deployment with 3 replicas, delete one pod with kubectl delete pod, then run kubectl get pods and confirm a replacement appears."
       - slug: rollouts-and-rollbacks
+        id: rUleh83eWd3q
         title: "Rolling updates and rollbacks"
         goal: "Roll out a new version of an app with zero downtime and roll back when something breaks."
         prompt: |
@@ -135,6 +142,7 @@ modules:
           Grade each answer briefly.
         practice: "Update your Deployment to a new image tag, watch kubectl rollout status, then run kubectl rollout undo and confirm the previous version returns."
       - slug: jobs-and-cronjobs
+        id: yrLHW2yC9vit
         title: "Jobs and CronJobs: run-to-completion work"
         goal: "Run one-off batch tasks and scheduled tasks using Jobs and CronJobs instead of long-running Deployments."
         prompt: |
@@ -154,6 +162,7 @@ modules:
   - title: Networking — Services and Ingress
     steps:
       - slug: pod-networking
+        id: pRQnQ7SvXHTj
         title: "How pods talk: the networking model"
         goal: "Explain the flat pod network, why pod IPs are ephemeral, and why you need a stable address in front of pods."
         prompt: |
@@ -171,6 +180,7 @@ modules:
           Grade each answer briefly.
         practice: "Run two pods, find their IPs with kubectl get pods -o wide, exec into one and ping/curl the other's IP, then delete and recreate one pod and observe its IP change."
       - slug: services
+        id: cxWBE7v1bIHq
         title: "Services: stable access to pods"
         goal: "Use a Service to give a stable name and IP to a set of pods, and understand ClusterIP vs. NodePort vs. LoadBalancer."
         prompt: |
@@ -188,6 +198,7 @@ modules:
           Grade each answer briefly.
         practice: "Expose your existing Deployment with a ClusterIP Service, then run a temporary pod and curl the Service by its DNS name to confirm load balancing."
       - slug: ingress
+        id: xDxg91BStBRi
         title: "Ingress: HTTP routing into the cluster"
         goal: "Route external HTTP traffic to multiple Services by hostname and path using an Ingress and an ingress controller."
         prompt: |
@@ -208,6 +219,7 @@ modules:
   - title: Configuration & Storage
     steps:
       - slug: configmaps
+        id: xfYwPBdMpQIm
         title: "ConfigMaps: externalizing configuration"
         goal: "Separate configuration from container images using ConfigMaps injected as env vars or mounted files."
         prompt: |
@@ -226,6 +238,7 @@ modules:
           Grade each answer briefly.
         practice: "Create a ConfigMap with one key, inject it into a pod as an environment variable, and confirm it with kubectl exec ... -- env."
       - slug: secrets
+        id: ztpWwhKQPPNy
         title: "Secrets: handling sensitive values"
         goal: "Store and consume sensitive data with Secrets, and understand their real (limited) security guarantees."
         prompt: |
@@ -245,6 +258,7 @@ modules:
           Grade each answer briefly.
         practice: "Create a Secret holding a fake API key, mount it into a pod as a file, and read the file with kubectl exec to confirm the value arrives."
       - slug: volumes-and-persistence
+        id: sUCwjLzfOhR0
         title: "Volumes and persistent storage"
         goal: "Understand why container storage is ephemeral and use PersistentVolumeClaims to keep data across pod restarts."
         prompt: |
@@ -262,6 +276,7 @@ modules:
           Grade each answer briefly.
         practice: "Create a PVC, mount it in a pod, write a file to the mounted path, delete and recreate the pod, and confirm the file is still there."
       - slug: namespaces-and-rbac
+        id: d0wa1d2bV9X1
         title: "Namespaces and a first look at RBAC"
         goal: "Organize cluster objects with namespaces and understand the basics of who-can-do-what via RBAC."
         prompt: |
@@ -282,6 +297,7 @@ modules:
   - title: Operations — Health, Scaling, Debugging
     steps:
       - slug: probes
+        id: biACEcn1RKFn
         title: "Health checks: liveness, readiness, startup probes"
         goal: "Configure probes so Kubernetes restarts stuck containers and only routes traffic to ready ones."
         prompt: |
@@ -301,6 +317,7 @@ modules:
           Grade each answer briefly.
         practice: "Add a liveness and a readiness probe to a Deployment, then break the readiness endpoint and confirm with kubectl get pods that the pod shows not-Ready and is removed from the Service."
       - slug: resources-and-autoscaling
+        id: y60z4Vl4OiNS
         title: "Resource requests, limits, and autoscaling"
         goal: "Set CPU/memory requests and limits, and scale apps automatically based on load with the Horizontal Pod Autoscaler."
         prompt: |
@@ -318,6 +335,7 @@ modules:
           Grade each answer briefly.
         practice: "Add CPU/memory requests and limits to a Deployment, then create an HPA targeting CPU and use kubectl get hpa to watch it react (generate load if you can)."
       - slug: debugging-workflow
+        id: uALiadSaFl8K
         title: "Debugging: a systematic workflow"
         goal: "Diagnose a broken workload methodically using describe, logs, events, and exec instead of guessing."
         prompt: |
@@ -336,6 +354,7 @@ modules:
           Grade each answer briefly.
         practice: "Deliberately deploy a pod with a wrong image name, then use kubectl describe and the Events section to identify the failure, and fix it."
       - slug: observability-and-next-steps
+        id: y7kErh7f4idv
         title: "Observability and where to go next"
         goal: "Know how to see what's happening across a cluster and choose a sensible next learning direction."
         prompt: |

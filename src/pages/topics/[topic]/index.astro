@@ -45,7 +45,7 @@ const modules = t.modules.map((m) => ({
         {mod.steps.length > 0 ? (
           <ol class="path">
             {mod.steps.map((s) => (
-              <li class="station" data-step={`${t.id}/${s.slug}`}>
+              <li class="station" data-step={s.id}>
                 <span class="dot"></span>
                 <a class="station-card" href={`/topics/${t.id}/${s.slug}/`}>
                   <span class="label">
