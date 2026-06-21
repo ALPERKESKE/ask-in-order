@@ -1,5 +1,6 @@
 ---
 import Base from '../../../layouts/Base.astro';
+import Discussion from '../../../components/Discussion.astro';
 import { loadTopics, flatSteps } from '../../../lib/topics.js';
 
 export function getStaticPaths() {
@@ -62,14 +63,11 @@ const stepKey = `${t.id}/${step.slug}`;
       : <a href={`/topics/${t.id}/`}>Back to path overview ✓</a>}</span>
   </div>
 
-  <div class="box" style="margin-top:3rem">
-    <h2>Discussion</h2>
-    <p class="note">
-      Comments (via giscus / GitHub Discussions) will appear here once the
-      repository is public. Found a better prompt for this step? That's
-      exactly what belongs in the discussion — or straight into a pull request.
-    </p>
-  </div>
+  <Discussion
+    term={stepKey}
+    editPath={`content/topics/${t.id}.yaml`}
+    heading="Discussion & ratings for this step"
+  />
   </div>
 
   <script>

@@ -1,5 +1,6 @@
 ---
 import Base from '../../../layouts/Base.astro';
+import Discussion from '../../../components/Discussion.astro';
 import { loadTopics, stepCount } from '../../../lib/topics.js';
 
 export function getStaticPaths() {
@@ -62,6 +63,12 @@ const modules = t.modules.map((m) => ({
         )}
       </section>
     ))}
+
+    <Discussion
+      term={t.id}
+      editPath={`content/topics/${t.id}.yaml`}
+      heading={`Discuss & rate the ${t.title} path`}
+    />
   </div>
 
   <script>

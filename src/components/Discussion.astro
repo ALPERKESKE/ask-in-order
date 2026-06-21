@@ -1,0 +1,58 @@
+---
+import { site, editUrl } from '../lib/site.js';
+
+// Reusable discussion + ratings block.
+//   term     – stable giscus discussion key for this page (e.g. "home", "docker", "docker/volumes")
+//   editPath – repo file to open in GitHub's editor for "suggest a change" (optional)
+//   heading  – section title
+const {
+  term,
+  editPath,
+  heading = 'Discussion & ratings',
+} = Astro.props;
+
+const g = site.giscus;
+---
+<section class="discussion">
+  <div class="disc-head">
+    <h2>{heading}</h2>
+    {editPath && (
+      <a class="suggest" href={editUrl(editPath)} target="_blank" rel="noopener">
+        ✎ Suggest a change
+      </a>
+    )}
+  </div>
+  <p class="note">
+    Rate this with 👍 / 👎, leave a comment, or open a pull request — every path
+    here is community-maintained. Sign in with GitHub to react or reply.
+  </p>
+
+  {g.enabled ? (
+    <div class="giscus-wrap">
+      <script
+        is:inline
+        src="https://giscus.app/client.js"
+        data-repo={site.repo}
+        data-repo-id={g.repoId}
+        data-category={g.category}
+        data-category-id={g.categoryId}
+        data-mapping="specific"
+        data-term={term}
+        data-strict="1"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="light"
+        data-lang="en"
+        crossorigin="anonymous"
+        async
+      ></script>
+    </div>
+  ) : (
+    <p class="disc-soon note">
+      💬 Comments and ratings go live here once the project is on GitHub
+      (giscus / GitHub Discussions). Until then, the
+      <a href="/contribute/">Contribute</a> page explains how paths are built.
+    </p>
+  )}
+</section>

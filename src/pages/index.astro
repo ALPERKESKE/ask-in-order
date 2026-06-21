@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import Discussion from '../components/Discussion.astro';
 import { loadTopics, stepCount, firstExample } from '../lib/topics.js';
 
 const topics = loadTopics();
@@ -67,6 +68,11 @@ const exPrompt = ex
       should come earlier? A prompt could be better? Open a pull request.
     </p>
   </section>
+
+  <Discussion
+    term="home"
+    heading="Discussion & feedback"
+  />
 
   <script>
     // Show per-topic progress on the cards for returning visitors.

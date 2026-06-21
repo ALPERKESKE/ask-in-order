@@ -455,6 +455,44 @@ button.mark.is-done { background: var(--topic); color: white; }
 }
 .prose pre code { background: none; padding: 0; color: inherit; }
 
+/* ---------- discussion & ratings ---------- */
+
+.discussion {
+  margin-top: 3.5rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--border);
+}
+.disc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.disc-head h2 { margin: 0; font-size: 1.2rem; }
+.suggest {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--topic);
+  border: 1px solid color-mix(in srgb, var(--topic) 35%, var(--border));
+  border-radius: 99px;
+  padding: 0.3rem 0.85rem;
+  white-space: nowrap;
+}
+.suggest:hover { text-decoration: none; background: color-mix(in srgb, var(--topic) 8%, white); }
+.discussion .note { margin: 0.5rem 0 0; }
+.disc-soon {
+  margin-top: 1rem;
+  background: var(--surface);
+  border: 1px dashed var(--border-strong);
+  border-radius: 12px;
+  padding: 1.1rem 1.3rem;
+}
+.giscus-wrap { margin-top: 1.25rem; }
+
 /* ---------- mobile ---------- */
 
 @media (max-width: 640px) {
