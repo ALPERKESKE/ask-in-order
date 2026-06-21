@@ -130,6 +130,60 @@ footer.site {
 }
 .badge.skeleton { color: var(--warn-text); background: var(--warn-bg); }
 
+/* per-topic progress bar on the cards (shown only for returning visitors) */
+.card-bar {
+  margin-top: 0.7rem;
+  height: 5px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.card-bar > span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--topic);
+  border-radius: 99px;
+}
+
+/* ---------- homepage: example step preview ---------- */
+
+.example { margin-top: 3.5rem; }
+.example-h {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--dim);
+  margin: 0 0 0.9rem;
+}
+.example-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem 1.6rem 1.6rem;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.example-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: var(--topic);
+}
+.example-title { margin: 0.1rem 0 0.6rem; font-size: 1.35rem; }
+.example-card .box { margin: 0.9rem 0; }
+.example-card .prompt { margin: 1rem 0 0.4rem; }
+.example-cta {
+  display: inline-block;
+  margin-top: 1rem;
+  color: var(--topic);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
 /* ---------- topic page: the path ---------- */
 
 .crumbs { font-size: 0.85rem; color: var(--dim); margin-bottom: 1.25rem; }
@@ -162,6 +216,19 @@ footer.site {
   border-radius: 99px;
   transition: width 0.4s ease;
 }
+
+.resume {
+  display: inline-block;
+  margin-top: 1rem;
+  background: var(--topic);
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.5rem 1.2rem;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+.resume:hover { text-decoration: none; filter: brightness(1.08); }
 
 .module { margin-top: 2.5rem; }
 .module > h2 {
@@ -387,3 +454,29 @@ button.mark.is-done { background: var(--topic); color: white; }
   box-shadow: var(--shadow);
 }
 .prose pre code { background: none; padding: 0; color: inherit; }
+
+/* ---------- mobile ---------- */
+
+@media (max-width: 640px) {
+  .container { padding: 0 1rem; }
+  main { padding: 1.75rem 0 3.5rem; }
+
+  .hero h1 { font-size: 1.9rem; }
+  .hero p.lead { font-size: 1.02rem; }
+  .topic-hero h1 { font-size: 1.65rem; }
+  .step-title { font-size: 1.5rem; }
+  .example-title { font-size: 1.2rem; }
+  .example-card { padding: 1.2rem 1.1rem 1.3rem; }
+
+  nav.main a { margin-left: 1rem; }
+
+  /* tighten the metro line so long titles get more room on narrow screens */
+  .station { padding-left: 2.1rem; }
+  .module > h2 { margin-left: 2.1rem; }
+  .empty { margin-left: 2.1rem; }
+  .station::before { left: 0.55rem; }
+  .station .dot { left: 0.1rem; }
+
+  .step-nav { flex-direction: column; gap: 0.5rem; }
+  .prompt .head { flex-wrap: wrap; gap: 0.5rem; }
+}

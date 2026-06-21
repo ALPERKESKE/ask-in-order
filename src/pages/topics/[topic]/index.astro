@@ -33,6 +33,9 @@ const modules = t.modules.map((m) => ({
           <div class="bar"><span data-progress-bar></span></div>
         </div>
       )}
+      {total > 0 && (
+        <a class="resume" data-resume hidden href={`/topics/${t.id}/`}>Start the path →</a>
+      )}
     </section>
 
     {modules.map((mod) => (
@@ -65,22 +68,33 @@ const modules = t.modules.map((m) => ({
     const done = JSON.parse(localStorage.getItem('aio-done') || '{}');
     const stations = [...document.querySelectorAll('[data-step]')];
     let count = 0;
-    let currentSet = false;
+    let currentEl = null;
     for (const el of stations) {
       if (done[el.dataset.step]) {
         el.classList.add('done');
         count++;
-      } else if (!currentSet) {
+      } else if (!currentEl) {
         el.classList.add('current');
-        currentSet = true;
+        currentEl = el;
       }
     }
+    const total = stations.length;
     const label = document.querySelector('[data-progress-label]');
     if (label) {
-      const total = Number(label.dataset.total);
       label.textContent = `${count} / ${total} completed`;
       const bar = document.querySelector('[data-progress-bar]');
       if (bar && total > 0) bar.style.width = `${(count / total) * 100}%`;
+    }
+    // Resume button: jump to the current step (or start / review when at the edges).
+    const resume = document.querySelector('[data-resume]');
+    if (resume && total > 0) {
+      const target = currentEl || stations[stations.length - 1];
+      const href = target?.querySelector('a.station-card')?.getAttribute('href');
+      if (href) resume.setAttribute('href', href);
+      resume.textContent = count === 0 ? 'Start the path →'
+        : count >= total ? 'Review the path →'
+        : 'Continue where you left off →';
+      resume.hidden = false;
     }
   </script>
 </Base>

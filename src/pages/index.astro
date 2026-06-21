@@ -1,8 +1,13 @@
 ---
 import Base from '../layouts/Base.astro';
-import { loadTopics, stepCount } from '../lib/topics.js';
+import { loadTopics, stepCount, firstExample } from '../lib/topics.js';
 
 const topics = loadTopics();
+const ex = firstExample(topics);
+// Trim the example prompt to a few lines so the preview stays compact.
+const exPrompt = ex
+  ? ex.step.prompt.trim().split('\n').slice(0, 4).join('\n') + '\n…'
+  : '';
 ---
 <Base>
   <section class="hero">
@@ -21,11 +26,33 @@ const topics = loadTopics();
         <h3>{t.title}</h3>
         <p>{t.tagline}</p>
         {t.status === 'ready'
-          ? <span class="badge ready">{stepCount(t)} steps · ready</span>
+          ? <span class="badge ready" data-card-badge data-topic={t.id} data-total={stepCount(t)}>{stepCount(t)} steps · ready</span>
           : <span class="badge skeleton">skeleton · contributions welcome</span>}
+        {t.status === 'ready' && (
+          <div class="card-bar" hidden data-card-bar data-topic={t.id} data-total={stepCount(t)}><span></span></div>
+        )}
       </a>
     ))}
   </div>
+
+  {ex && (
+    <section class="example" style={`--topic:${ex.topic.color}`}>
+      <h2 class="example-h">What a single step looks like</h2>
+      <div class="example-card">
+        <p class="step-meta">{ex.topic.title} · {ex.module.title} · step 1</p>
+        <h3 class="example-title">{ex.step.title}</h3>
+        <div class="box goal">
+          <h2>Goal — what you'll know after this step</h2>
+          <p>{ex.step.goal}</p>
+        </div>
+        <div class="prompt">
+          <div class="head"><span>Ask your AI — copy into ChatGPT, Claude or Gemini</span></div>
+          <pre>{exPrompt}</pre>
+        </div>
+        <a class="example-cta" href={`/topics/${ex.topic.id}/`}>See the full {ex.topic.title} path →</a>
+      </div>
+    </section>
+  )}
 
   <section class="prose" style="margin-top:3.5rem">
     <h2>How it works</h2>
@@ -40,4 +67,25 @@ const topics = loadTopics();
       should come earlier? A prompt could be better? Open a pull request.
     </p>
   </section>
+
+  <script>
+    // Show per-topic progress on the cards for returning visitors.
+    const done = JSON.parse(localStorage.getItem('aio-done') || '{}');
+    const countFor = (topic) =>
+      Object.keys(done).filter((k) => done[k] && k.startsWith(topic + '/')).length;
+
+    for (const badge of document.querySelectorAll('[data-card-badge]')) {
+      const c = countFor(badge.dataset.topic);
+      const total = Number(badge.dataset.total);
+      if (c > 0) badge.textContent = `${c} / ${total} done`;
+    }
+    for (const wrap of document.querySelectorAll('[data-card-bar]')) {
+      const c = countFor(wrap.dataset.topic);
+      const total = Number(wrap.dataset.total);
+      if (c > 0 && total > 0) {
+        wrap.hidden = false;
+        wrap.querySelector('span').style.width = `${(c / total) * 100}%`;
+      }
+    }
+  </script>
 </Base>

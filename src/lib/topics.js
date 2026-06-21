@@ -25,6 +25,19 @@ export function stepCount(topic) {
   return topic.modules.reduce((n, m) => n + m.steps.length, 0);
 }
 
+// First real step of the first "ready" topic — used as a live example on the homepage.
+export function firstExample(topics) {
+  for (const t of topics) {
+    if (t.status !== 'ready') continue;
+    for (const mod of t.modules) {
+      if (mod.steps.length > 0) {
+        return { topic: t, module: mod, step: mod.steps[0] };
+      }
+    }
+  }
+  return null;
+}
+
 // Flat list of steps with module context and prev/next links, for step pages.
 export function flatSteps(topic) {
   const flat = [];
