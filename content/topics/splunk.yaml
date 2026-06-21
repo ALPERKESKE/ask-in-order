@@ -22,7 +22,7 @@ modules:
         quiz_prompt: |
           Quiz me on "what Splunk is": 3 questions, one at a time. Include one scenario question
           ("a team wants to do X — is Splunk a good fit, why/why not?"). Grade each answer briefly.
-        practice: "Write one paragraph (anywhere — notes app is fine) describing a problem from your own work or home lab that Splunk could solve."
+        practice: "Pick a real data source you can access (web, app, firewall or home-lab logs). Write down three concrete things: (a) what one raw line looks like, (b) two specific questions you'd want it to answer (e.g. 'which IP caused the most errors today?'), and (c) for each question, which field Splunk would need to extract to answer it."
 
       - slug: core-concepts
         id: lWb6IszhZ7Od
@@ -32,8 +32,15 @@ modules:
           I'm learning Splunk. I know roughly what it's for, but not how it organizes data.
           Act as my instructor and teach me the five core concepts: event, index, sourcetype, source, host.
           For each: a one-line definition plus a concrete example using an nginx access log line.
+          Nail the distinction people get wrong: source is WHERE the data came from (the file path or
+          input, set automatically — you rarely override it), while sourcetype is the FORMAT/type and is
+          the one that drives parsing and field extraction. host is the machine; index is the storage
+          bucket you choose.
           Then explain "schema on read / schema at search time" and why it's a big deal compared to
           defining table columns upfront in a database.
+          Teach me the core discipline that follows from this: define ONE sourcetype per distinct format,
+          because the sourcetype is what every downstream extraction, dashboard and app keys off — a
+          sloppy or auto-guessed sourcetype is the root of most onboarding pain later.
           Finally ask me 3 check questions one at a time (e.g. "an nginx log and a firewall log arrive —
           same index or different? same sourcetype or different?") and wait for my answers.
         quiz_prompt: |
@@ -51,7 +58,10 @@ modules:
           1) Give me a single docker run (or docker compose) command for the official splunk/splunk image,
              with the web UI on port 8000 and an admin password I set myself.
           2) Explain what each option in the command does.
-          3) Explain the free/trial license limits in two sentences.
+          3) Explain the licence path precisely: a new instance runs a 60-day Enterprise Trial (all
+             features, up to 500 MB/day indexing); after it expires you switch to the free licence —
+             still 500 MB/day indefinitely, but WITHOUT login/authentication, alerting, or distributed
+             search. Exceeding 500 MB/day gives a licence warning, not a shutdown.
           4) Tell me how to verify it's healthy and log in for the first time.
           If something might go wrong (slow first start, low RAM), warn me up front. I'll run the
           commands and report back — wait for me and help me troubleshoot before moving on.
@@ -67,11 +77,15 @@ modules:
         prompt: |
           My Splunk sandbox is running and I'm in the Search & Reporting app for the first time.
           Act as my instructor:
-          1) Explain the anatomy of the search screen: search bar, time range picker, events tab, fields sidebar.
-          2) Have me run: index=_internal — and explain what this index is and why it's perfect for practice.
+          1) Explain the anatomy of the search screen: search bar, time range picker, events tab, and the
+             fields sidebar — including that it splits into Selected Fields and Interesting Fields, where
+             "interesting" means a field that appears in at least 20% of the matching events.
+          2) Have me run: index=_internal — and explain what this index is (Splunk logging about itself,
+             present on every instance) and why it's perfect, always-available practice data.
           3) Show me how to narrow by time (last 15 minutes) and why time range is the single most
              important performance habit in Splunk.
-          4) Have me click a field in the sidebar and explain what I'm seeing.
+          4) Have me click a field in the sidebar and explain what I'm seeing (top values, counts, and the
+             quick "Yes/No" coverage).
           Give me the searches one at a time, wait for me to run each and tell you what I see.
         quiz_prompt: |
           Quiz me on Splunk search basics: 4 questions, one at a time — include one about why
