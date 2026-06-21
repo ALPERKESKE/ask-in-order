@@ -8,9 +8,12 @@
     "build": "astro build",
     "preview": "astro preview",
     "health": "node scripts/path-health.mjs",
-    "triage": "node scripts/triage.mjs"
+    "triage": "node scripts/triage.mjs",
+    "mcp": "node mcp/server.mjs",
+    "mcp:test": "node mcp/test-client.mjs"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "astro": "^5.7.0",
     "js-yaml": "^4.1.0"
   }
