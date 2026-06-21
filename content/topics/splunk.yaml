@@ -166,6 +166,108 @@ modules:
           Include one combining eval and stats. Grade strictly.
         practice: "In _internal, create a field that buckets events by the length of their _raw text (short/medium/long) and count events per bucket."
 
+  - title: Fields & Extraction
+    steps:
+      - slug: regex-for-splunk
+        id: tesrYlGJTy40
+        title: "Regex you actually need in Splunk"
+        goal: "Read and write the regex Splunk uses — character classes, quantifiers, anchors, groups and named capture — and know the three places regex shows up: rex, where match(), and the regex command."
+        prompt: |
+          I'm learning SPL and keep hitting regex. Teach me the practical subset, Splunk-flavoured.
+          Act as my instructor:
+          1) The 20% of regex that covers 90% of Splunk work: literals and ., the classes \d \w \s,
+             custom classes [...], quantifiers * + ? {n,m}, anchors ^ $, alternation |, groups ( ),
+             and — most important in Splunk — NAMED capture (?<name>...).
+          2) The three places regex appears: the rex command (to EXTRACT), where match(field,"regex")
+             and the regex command (to FILTER), and replace()/rex sed-mode (to REWRITE).
+          3) Greedy vs lazy (.* vs .*?) — explain why this is the single most common rex bug, with a
+             before/after on a real line.
+          Use this real splunkd_access line as the running example:
+          127.0.0.1 - splunk-system-user [21/Jun/2026:18:27:23.939 +0200] "GET /services/... HTTP/1.0" 200 3 "-" "splunk-sdk-python/2.0.2" - - - 4ms
+          Have me write a regex that captures the trailing response time (the "4ms"). Give me 2 more
+          exercises one at a time and check each before continuing.
+          One field note: Splunk's regex is PCRE, and you should always test a pattern live with the
+          rex command before baking it into props.conf — a wrong pattern there fails silently and
+          extracts nothing, with no error.
+        quiz_prompt: |
+          Quiz me on Splunk regex: 5 questions one at a time. Mix "what does this pattern match?" with
+          "write the pattern for X", and include one greedy-vs-lazy trap where .* captures too much.
+          Grade strictly and show the idiomatic pattern.
+        practice: "On index=_internal sourcetype=splunkd_access, write a regex that captures the 3-digit HTTP status code, then confirm it with: rex \"HTTP/\\d\\.\\d\\\" (?<status>\\d{3})\" | stats count by status."
+
+      - slug: field-extraction-with-rex
+        id: mzHFCgvWPTQo
+        title: "Extracting fields at search time with rex"
+        goal: "Use the rex command to pull new fields out of _raw at search time — named groups, the field= option, max_match for multivalue, and sed mode for masking — and understand why this beats reindexing."
+        prompt: |
+          I can read Splunk regex now. Teach me the rex command hands-on, with searches I can run on
+          index=_internal in my sandbox.
+          Act as my instructor and give me each example to run, waiting for my result:
+          1) rex anatomy: `rex field=_raw "(?<name>pattern)"` (field defaults to _raw).
+          2) A verified single-field extraction — average response time of the management port:
+             index=_internal sourcetype=splunkd_access | rex "(?<resp_ms>\d+)ms$" | stats avg(resp_ms) as avg_ms max(resp_ms) as max_ms
+             Explain that resp_ms arrives as a string and becomes numeric when used in avg().
+          3) Several fields in one rex — method and path from the request line:
+             ... | rex "\"(?<method>[A-Z]+) (?<uri_path>[^ ?]+)" | stats count by method
+          4) max_match=0 to capture repeating matches into a multivalue field; and rex mode=sed to
+             mask/redact (e.g. replace digits with X).
+          5) Why rex matters: it's search-time and retroactive — you extract fields from data already
+             indexed, with no reindex. Tie this back to schema-on-read.
+          The catch to teach me: a rex field exists only for THAT search. Making it permanent is the
+          next step.
+        quiz_prompt: |
+          Quiz me on rex: 5 questions one at a time. At least two are "write the rex for X" on a given
+          line; include one on what max_match=0 produces and one on sed mode. Grade strictly.
+        practice: "On index=_internal sourcetype=splunkd, extract the log level and component with one rex and summarise them — verified pattern: rex \"\\d{2}:\\d{2}:\\d{2}\\.\\d+ [+-]\\d{4} (?<level>[A-Z]+)\\s+(?<component>\\w+)\" | stats count by level, component | sort -count."
+
+      - slug: persistent-extractions
+        id: ldE1Ken0WhTy
+        title: "Making extractions permanent (Field Extractor, props/transforms)"
+        goal: "Turn a working rex into a reusable, automatic field extraction — via the Field Extractor UI and via props.conf/transforms.conf — and know when to use inline EXTRACT vs a REPORT transform."
+        prompt: |
+          I can extract fields with rex, but I'm repeating the same rex in every search. Teach me how
+          to make an extraction permanent so the field appears automatically. I'll follow along in my
+          sandbox — give me the steps in stages and wait after each.
+          Act as my guide:
+          1) The problem and the payoff: define the extraction once against a sourcetype, and every
+             future search on that sourcetype gets the field for free — still search-time, no reindex.
+          2) The Field Extractor (UI): from a search result, click a field value → Extract Fields, pick
+             regex or delimiter, name the field, set permissions, save it to the sourcetype. Walk me
+             through extracting resp_ms from splunkd_access this way.
+          3) What it writes under the hood: props.conf `EXTRACT-name = <regex>` (inline, simple,
+             self-contained) vs `REPORT-name = <stanza>` pointing at a transforms.conf stanza (for
+             reuse, delimiter-based, or multi-field/shared extractions). When to choose each.
+          4) Scope and gotchas: the extraction must target the correct sourcetype; KV_MODE/`| extract`
+             handles automatic key=value pairs; permissions decide who sees the field.
+        quiz_prompt: |
+          Quiz me on persistent extractions: 4 questions one at a time — EXTRACT vs REPORT, does it
+          reindex data, where it runs (parse-time or search-time), and which sourcetype a given
+          extraction applies to. Grade my reasoning.
+        practice: "Use the Field Extractor to create a permanent resp_ms field on the splunkd_access sourcetype, then run a brand-new search with NO rex and confirm resp_ms is already there."
+
+      - slug: multivalue-fields
+        id: ezFI6c9jQ7hK
+        title: "Multivalue fields: split, mvexpand, mvcount"
+        goal: "Create, inspect, expand and recombine fields that hold multiple values — split/makemv/max_match, mvcount/mvindex/mvfilter, mvexpand, and mvjoin — and avoid the classic 'stats by a multivalue field' surprise."
+        prompt: |
+          Teach me multivalue fields in SPL, with runnable index=_internal examples.
+          Act as my instructor, one example at a time:
+          1) What a multivalue field is — e.g. the output of stats values(), or anything you split().
+          2) Creating them: eval x=split(field,"delim"), the makemv command, and rex max_match=0.
+          3) Inspecting: mvcount() (how many), mvindex() (pick one), mvfilter()/mvfind() (subset/search).
+          4) Expanding to one event per value with mvexpand — and the memory caveat on large sets.
+          5) Recombining: mvjoin(field,"delim") and nomv.
+          Verified running example to walk me through — split a request path into its segments and
+          measure depth:
+          index=_internal sourcetype=splunkd_access | rex "\"(?<method>[A-Z]+) (?<uri_path>[^ ?]+)" | eval segments=split(uri_path,"/") | eval seg_count=mvcount(segments) | stats avg(seg_count) as avg_segments max(seg_count) as max_segments
+          Then give me 2 exercises one at a time.
+          The trap to teach me: `stats count by mv_field` counts each event once against ALL its values,
+          whereas mvexpand first then stats gives one row per value — different answers, pick on purpose.
+        quiz_prompt: |
+          Quiz me on multivalue fields: 4 questions one at a time — mvcount vs mvexpand, when to expand,
+          how to recombine, and one scenario where stats-by-mv vs mvexpand-then-stats differ. Grade me.
+        practice: "On index=_internal sourcetype=splunkd_access, find the request with the deepest URI path: split the path on '/', count segments with mvcount, and sort to the top."
+
   - title: Intermediate SPL
     steps:
       - slug: timechart
