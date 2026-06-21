@@ -7,10 +7,10 @@ export const site = {
   // Flip `enabled` to true after: (1) the repo is public, (2) GitHub Discussions
   // is on, (3) the giscus app is installed, then paste the IDs from https://giscus.app.
   giscus: {
-    enabled: false,
-    repoId: '',
-    category: 'Paths',
-    categoryId: '',
+    enabled: true,
+    repoId: 'R_kgDOTA8i-g',
+    category: 'Announcements',
+    categoryId: 'DIC_kwDOTA8i-s4C_mVt',
   },
 };
 
