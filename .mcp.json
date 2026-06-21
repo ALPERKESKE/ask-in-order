@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "ask-in-order": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "mcp/server.mjs"
+      ],
+      "env": {}
+    }
+  }
+}
