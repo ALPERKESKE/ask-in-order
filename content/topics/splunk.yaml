@@ -272,8 +272,9 @@ modules:
              Explain that resp_ms arrives as a string and becomes numeric when used in avg().
           3) Several fields in one rex — method and path from the request line:
              ... | rex "\"(?<method>[A-Z]+) (?<uri_path>[^ ?]+)" | stats count by method
-          4) max_match=0 to capture repeating matches into a multivalue field; and rex mode=sed to
-             mask/redact (e.g. replace digits with X).
+          4) max_match: it defaults to 1 (rex stops at the first match), so set max_match=0 to capture
+             ALL repeating matches into a multivalue field; and rex mode=sed to mask/redact (e.g. replace
+             digits with X — the s/// substitute form, with the g flag for every occurrence).
           5) Why rex matters: it's search-time and retroactive — you extract fields from data already
              indexed, with no reindex. Tie this back to schema-on-read.
           The catch to teach me: a rex field exists only for THAT search. Making it permanent is the
@@ -300,7 +301,11 @@ modules:
           3) What it writes under the hood: props.conf `EXTRACT-name = <regex>` (inline, simple,
              self-contained) vs `REPORT-name = <stanza>` pointing at a transforms.conf stanza (for
              reuse, delimiter-based, or multi-field/shared extractions). When to choose each.
-          4) Scope and gotchas: the extraction must target the correct sourcetype; KV_MODE/`| extract`
+          4) The distinction people get wrong: EXTRACT- and REPORT- are both SEARCH-time (no reindex,
+             change them anytime). The look-alike `TRANSFORMS-name` in props.conf is INDEX-time field
+             extraction — permanent, applied at ingest, needs a re-index to change. Don't reach for
+             index-time unless you truly need it.
+          5) Scope and gotchas: the extraction must target the correct sourcetype; KV_MODE/`| extract`
              handles automatic key=value pairs; permissions decide who sees the field.
         quiz_prompt: |
           Quiz me on persistent extractions: 4 questions one at a time — EXTRACT vs REPORT, does it
@@ -318,7 +323,10 @@ modules:
           1) What a multivalue field is — e.g. the output of stats values(), or anything you split().
           2) Creating them: eval x=split(field,"delim"), the makemv command, and rex max_match=0.
           3) Inspecting: mvcount() (how many), mvindex() (pick one), mvfilter()/mvfind() (subset/search).
-          4) Expanding to one event per value with mvexpand — and the memory caveat on large sets.
+          4) Expanding to one event per value with mvexpand — and the precise caveat: mvexpand has a RAM
+             ceiling (default 500MB, the max_mem_usage_mb limit), and when a chunk exceeds it the chunk
+             is silently TRUNCATED with only a warning — so on a big multivalue field you can quietly lose
+             rows. Use the limit=<int> option or expand later in the pipeline on fewer events.
           5) Recombining: mvjoin(field,"delim") and nomv.
           Verified running example to walk me through — split a request path into its segments and
           measure depth:
@@ -454,7 +462,9 @@ modules:
           Act as my guide:
           1) Eventtype: a saved search condition that becomes a label on every matching event. Define
              one — e.g. "splunkd_error" = (index=_internal log_level=ERROR) — then I can just search
-             eventtype=splunkd_error.
+             eventtype=splunkd_error. Key constraint: an eventtype's definition is only the SEARCH
+             condition — it cannot contain a pipe or a subsearch (no transforming commands), so it
+             classifies events, it doesn't transform them.
           2) Tags: a label attached to a specific field=value pair (e.g. tag a host as "webserver" and
              "production"), so tag=webserver finds it regardless of the hostname.
           3) Why both matter: they decouple WHAT you mean from HOW each source spells it, so one query
@@ -523,7 +533,10 @@ modules:
           2) Pivot: a point-and-click reporting UI on top of a data model — people who don't know SPL
              build tables and charts from it.
           3) Acceleration: a model can be accelerated (a background tsidx summary) so Pivot and tstats
-             run fast over huge volumes — this sets up the next step.
+             run fast over huge volumes — this sets up the next step. Mention the subtlety: when you change
+             an accelerated model's constraints, old summaries can disagree with the new definition — by
+             default Splunk ignores summaries older than the change (allow_old_summaries=false) until the
+             backfill catches up, so results can look thin right after an edit.
           4) The datamodel and pivot commands for driving a model from SPL.
           Be honest with me: my sandbox may not have any data models yet, so treat this as conceptual
           and have me inspect whatever exists. Then ask me 3 check questions one at a time.
