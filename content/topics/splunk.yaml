@@ -339,9 +339,13 @@ modules:
         goal: "Turn events into time series with timechart, control granularity with span, and split series with a by-field."
         prompt: |
           I'm learning SPL — solid on stats and eval. Teach me timechart:
-          1) How it differs from stats (time becomes the x-axis automatically).
-          2) span= for granularity and what happens if I omit it.
-          3) Splitting into multiple series with "by", and the limit/useother options.
+          1) How it differs from stats (time becomes the x-axis automatically — it implicitly buckets
+             by _time, so you never put _time in a by clause).
+          2) span= for granularity and what happens if I omit it (Splunk auto-picks a span from the time
+             range, so the same search looks different over 1 hour vs 7 days).
+          3) Splitting into multiple series with "by" — and the trap: a by-field defaults to limit=10
+             series, lumping everything else into "OTHER". Use limit=0 to keep all, or useother=f /
+             usenull=f to drop the OTHER/NULL series. People miss real series because of this default.
           4) Where to click to see the chart instead of the table.
           Runnable index=_internal examples (e.g. timechart count by sourcetype). Then 2 exercises
           one at a time with review.
@@ -358,7 +362,10 @@ modules:
           I'm learning SPL — comfortable with stats and timechart. Teach me eventstats and streamstats:
           1) eventstats: like stats, but the aggregate is attached to every event instead of collapsing
              them. Example use: "show events whose size is above the average".
-          2) streamstats: running aggregates in event order; window= and current= options.
+          2) streamstats: running aggregates in event order; window= (sliding window of N events),
+             current=f (exclude the current event, e.g. to compare to the previous), global=f and
+             reset_on_change/reset_before for restarting the running calc per group. Order matters, so
+             sort before streamstats when sequence is meaningful.
              Example use: running count per host, or comparing each event to the previous one.
           3) A clear side-by-side: same data through stats vs eventstats vs streamstats.
           Runnable index=_internal examples. Then 2 exercises one at a time, review my answers.
@@ -376,8 +383,12 @@ modules:
           1) The concept: joining a small reference table (CSV) onto events at search time —
              e.g. mapping status codes to descriptions, hosts to owners.
           2) Walk me through creating a small CSV lookup in the UI (Settings → Lookups), step by step.
-          3) The lookup command syntax and the inputlookup/outputlookup commands.
-          4) Automatic lookups in one paragraph — what they are and one caution.
+          3) The three commands, precisely: lookup (enrich your events with matching rows),
+             inputlookup (read the lookup table itself as a result set, great for inspecting it), and
+             outputlookup (write results back to a lookup, e.g. to build/refresh it).
+          4) Automatic lookups in one paragraph — defined on a sourcetype so the fields appear without
+             typing lookup — and the cautions: matches are CASE-SENSITIVE by default (case_sensitive_match),
+             and an automatic lookup runs on every search of that sourcetype, so a big lookup is a constant tax.
           I'll follow along in my sandbox; give me the steps in stages and wait for my confirmation
           after each stage.
         quiz_prompt: |
@@ -393,8 +404,11 @@ modules:
           I'm learning SPL at intermediate level. Teach me subsearches and join — including why
           experienced Splunk users avoid them:
           1) Subsearch mechanics: [ ] runs first, results become filter conditions. One runnable example.
-          2) The hard limits (result caps, time limits) and how they silently truncate.
-          3) join: syntax, inner/outer — and its limits.
+          2) The hard limits and how they silently truncate: a subsearch returns at most 10,000 results
+             and is auto-finalized after 60 seconds — past either, it quietly returns partial data and
+             your outer search is silently wrong, with no error.
+          3) join: syntax, inner/outer — and its own limit: join output is capped (subsearch_maxout,
+             default 50,000 events), and it's slow because the right side runs as a subsearch.
           4) The important part: show the idiomatic stats alternative. Take one concrete "correlate
              two sourcetypes" problem and solve it twice: with join, then with
              (sourcetype=A OR sourcetype=B) | stats values(...) by common_field. Explain why the
@@ -579,7 +593,10 @@ modules:
         prompt: |
           I'm learning Splunk — my SPL is decent. Teach me saved searches and reports:
           1) Saving a search as a report from the UI; report permissions (private vs app-shared).
-          2) Scheduling: cron-style schedules, time ranges, and what "schedule window" does.
+          2) Scheduling: cron-style schedules, the time range that should match the schedule, and what a
+             "schedule window" does — it lets Splunk delay a non-urgent run to smooth load. Cover the
+             classic mistake: many searches all set to the top of the hour ("0 * * * *") stampede the
+             scheduler; stagger them or use a window.
           3) Why scheduling matters: scheduled searches power alerts and dashboard panels — they're
              also a common cause of overloaded Splunk servers. Two sentences on being a good citizen.
           I'll follow along in my sandbox. Walk me through saving and scheduling one report on
@@ -604,6 +621,11 @@ modules:
           5) Add a time range input and wire every panel to it.
           Give me each panel's SPL and the clicks needed. If my panel shows something unexpected,
           help me debug before moving on.
+          Teach me the performance habit that matters here: every panel runs its OWN search by default, so
+          a 10-panel dashboard launches 10 searches on each load. When panels share the same base data,
+          use a base search (Classic) or a base data source (Studio) and have panels post-process it, so
+          the heavy search runs once. Also prefer tokens from inputs over hardcoded values so one time
+          picker drives everything.
         quiz_prompt: |
           Quiz me on dashboard concepts: 4 questions one at a time — panel data sources, inputs/tokens,
           Studio vs Classic, and one performance question about many panels sharing one base search.
@@ -616,9 +638,13 @@ modules:
         prompt: |
           I'm learning Splunk — comfortable with SPL and reports. Teach me alerting:
           1) Anatomy of an alert: search + schedule + trigger condition + action.
-          2) Scheduled vs real-time alerts — and why real-time is rarely the right answer.
-          3) Trigger conditions (number of results, custom), and trigger "once" vs "for each result".
-          4) Throttling: what it does and why every alert should consider it.
+          2) Scheduled vs real-time alerts — and why real-time is rarely the right answer: a real-time
+             alert holds a search running continuously and consumes a search slot the whole time, so a
+             few of them can starve everything else. A scheduled alert every minute is almost always enough.
+          3) Trigger conditions (number of results, custom), and trigger "once" (one alert for the whole
+             run) vs "for each result" (one per row) — picking wrong here is how you send 500 emails.
+          4) Throttling: suppress repeat alerts for a period (optionally per a field like host) — what it
+             does and why every alert should consider it.
           5) Actions overview: email, webhook, run a script.
           Walk me through creating one alert in my sandbox on index=_internal log_level=ERROR,
           step by step, waiting for me. Then discuss: what makes an alert useful vs noisy —
@@ -637,10 +663,14 @@ modules:
           Act as my performance coach:
           1) How a search executes: indexers scan buckets by time, then filter, then transform —
              why the time range and the first pipe segment dominate cost.
-          2) The Job Inspector: where to find it and the 2–3 numbers worth reading first.
+          2) The Job Inspector: where to find it and the numbers worth reading first — total run time,
+             "this search has completed and was run over N events", and the command.search.* timings that
+             show whether time went to disk reads (too much data scanned) or to a slow command.
           3) The habit list: filter early (index/sourcetype/keywords before first pipe), use fields
-             early to cut data volume, avoid leading wildcards (*error), prefer tstats-able patterns —
-             explain each in 2-3 sentences with a bad-vs-good SPL pair.
+             early to cut data volume, avoid leading wildcards (*error) since they can't use the index,
+             prefer tstats-able patterns — explain each in 2-3 sentences with a bad-vs-good SPL pair.
+             Mention dense vs sparse vs rare searches: the rarer the term, the more a tight base filter
+             and a narrow time range pay off.
           Then show me one deliberately bad search on _internal and have me fix it step by step.
         quiz_prompt: |
           Quiz me on search performance: 4 questions one at a time. Show me slow SPL snippets and have
@@ -792,9 +822,14 @@ modules:
           Teach me how real deployments are shaped:
           1) The three roles living inside my single instance: search head, indexer, forwarder duties.
           2) Why and when they split: data volume and search load — typical small/medium/large shapes.
-          3) Indexer clustering: replication factor, search factor, the cluster manager — what failure
-             it protects against, in plain words.
-          4) Search head clustering: what it gives (HA for the UI/knowledge objects) and the deployer's job.
+          3) Indexer clustering: replication factor (how many copies of the raw data — default 3, so you
+             need at least 3 peer nodes) vs search factor (how many of those copies are searchable —
+             default 2), and the cluster manager that coordinates it. Explain in plain words what each
+             protects against: replication factor = no data loss when a node dies; search factor = searches
+             keep working without a rebuild. Higher factors cost more disk and CPU.
+          4) Search head clustering: what it gives (HA for the UI/knowledge objects) and the deployer's job
+             (note: the deployer pushes apps to the SH cluster, which is NOT the same as the deployment
+             server that pushes to forwarders — a classic mix-up).
           5) One diagram in ASCII art of a mid-size deployment with the data flow arrows.
           Then ask me 3 questions one at a time, scenario-style ("company X has Y GB/day — what shape?").
         quiz_prompt: |
@@ -810,7 +845,10 @@ modules:
           I'm finishing my Splunk learning path with admin survival skills. Teach me two things:
 
           A) Access control:
-          1) Users, roles, capabilities — and how index access is restricted per role.
+          1) Users, roles, capabilities — and how index access is restricted per role: capabilities grant
+             actions (e.g. can this role schedule searches?), while the role's allowed indexes
+             (srchIndexesAllowed/srchIndexesDefault) decide which data it can even see. Roles inherit from
+             other roles, so a user gets the UNION of their roles' capabilities.
           2) Walk me through creating a "readonly_practice" role in my sandbox that can only
              search the practice index, plus a test user with that role. Step by step, wait for me.
 
