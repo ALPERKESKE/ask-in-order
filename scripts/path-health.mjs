@@ -29,7 +29,7 @@ const [OWNER, REPO] = site.repo.split('/');
 
 // Comment text that signals real friction (English + Turkish). Reactions alone
 // only prioritise; a step is only auto-diagnosable when there's TEXT or a PR.
-const NEG = /\b(wrong|incorrect|doesn'?t work|does ?n'?t|broken|outdated|out of date|deprecated|confus\w*|unclear|misleading|mistake|typo|errors?|fails?|should be|isn'?t right|yanl[ıi]ş|çal[ıi]şm[ıi]yor|hata|kafa kar[ıi]ş\w*|eksik|güncel değil|bozuk|olmuyor)\b/i;
+const NEG = /\b(wrong|incorrect|doesn'?t work|does ?n'?t|broken|outdated|out of date|deprecated|confus\w*|unclear|vague|misleading|useless|pointless|too (vague|long|short|complex|hard|basic)|hard to follow|mistake|typo|errors?|fails?|should be|isn'?t right|yanl[ıi]ş|çal[ıi]şm[ıi]yor|hata|kafa kar[ıi]ş\w*|eksik|belirsiz|güncel değil|bozuk|olmuyor|işe yaramaz)\b/i;
 
 function die(msg) {
   console.error(`✗ ${msg}`);
@@ -146,7 +146,8 @@ for (const [key, meta] of keys) {
   const down = disc ? reactionCount(disc.reactionGroups, 'THUMBS_DOWN') : 0;
   const commentNodes = disc ? disc.comments.nodes : [];
   const comments = disc ? disc.comments.totalCount : 0;
-  const negativeComments = commentNodes.filter((c) => NEG.test(c.body || '')).length;
+  const criticalBodies = commentNodes.filter((c) => NEG.test(c.body || '')).map((c) => c.body);
+  const negativeComments = criticalBodies.length;
   const { prs, iss } = workForStep(meta);
 
   // weighting (designed): PR > textual comment > reactions
@@ -164,8 +165,9 @@ for (const [key, meta] of keys) {
     if (down > up) reasons.push(`${down}👎/${up}👍 (low volume — prioritise only)`);
   }
 
-  records.push({ key, label: `${meta.topic}/${meta.slug}`, title: meta.title,
-    status, up, down, comments, negativeComments,
+  records.push({ key, topic: meta.topic, slug: meta.slug,
+    label: `${meta.topic}/${meta.slug}`, title: meta.title,
+    status, up, down, comments, negativeComments, criticalBodies,
     openPRs: prs.length, openIssues: iss.length,
     revised: meta.revised, reasons, url: disc?.url ?? null });
 }

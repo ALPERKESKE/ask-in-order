@@ -7,7 +7,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "health": "node scripts/path-health.mjs"
+    "health": "node scripts/path-health.mjs",
+    "triage": "node scripts/triage.mjs"
   },
   "dependencies": {
     "astro": "^5.7.0",
