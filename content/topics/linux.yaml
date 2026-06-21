@@ -2,16 +2,418 @@ id: linux
 order: 4
 title: Linux
 tagline: Command line confidence — files, processes, services, networking and shell scripting.
-status: skeleton
+status: ready
 color: "#16a34a"
 modules:
   - title: Shell Basics
-    steps: []
+    steps:
+      - slug: what-is-the-shell
+        title: "What the shell actually is"
+        goal: "Explain what a shell is, how it differs from the terminal and the kernel, and what happens when you type a command and press Enter."
+        prompt: |
+          I'm starting a structured learning path for Linux and I'm comfortable using a computer
+          but new to the command line. Act as my instructor. Explain:
+          1) What a shell is (e.g. bash, zsh), and how it differs from the "terminal" window and the
+             "kernel" — keep these three clearly separated.
+          2) Step by step, what happens when I type `ls -l` and press Enter: how the shell parses it,
+             finds the program, runs it, and shows output.
+          3) What a "prompt" is and how to read it (user, host, current directory, $ vs #).
+          Keep it under 450 words, plain language, no history lessons.
+          Then ask me 2 short check questions, one at a time, and wait for my answer before continuing.
+        quiz_prompt: |
+          Quiz me on "what the shell is": 4 questions, one at a time. Include one scenario question
+          ("I opened a terminal and see a `#` instead of `$` — what does that tell me?"). Grade each
+          answer briefly before the next.
+        practice: "Open a terminal and run `echo $SHELL`, `whoami`, and `hostname`, then read your prompt aloud and name each part."
+      - slug: navigating-the-filesystem
+        title: "Moving around the filesystem"
+        goal: "Navigate directories confidently using pwd, ls, cd, and absolute vs relative paths."
+        prompt: |
+          I'm learning Linux. Teach me how to move around the filesystem. Act as my instructor and explain:
+          1) The Linux directory tree starting at `/` (root), and what `/home`, `/etc`, `/var`, `/tmp` are for — one line each.
+          2) The commands `pwd`, `ls` (with `-l`, `-a`, `-h`), and `cd`.
+          3) Absolute vs relative paths, and the shortcuts `.`, `..`, `~`, and `-` (cd to previous dir).
+          Use a concrete example walking from `/home/me` into `/etc` and back.
+          Keep it under 450 words.
+          Then ask me 3 check questions, one at a time, and wait for my answer each time.
+        quiz_prompt: |
+          Quiz me on filesystem navigation: 4 questions, one at a time. Include a scenario:
+          "I'm in /var/log and want to get to /home/me/notes in one command — what do I type?"
+          Grade each answer.
+        practice: "Starting from your home directory, cd into /etc, run ls -la, then return home using `cd -`."
+      - slug: getting-help
+        title: "Getting help on any command"
+        goal: "Find out what any command does and which options it takes, using man, --help, and apropos."
+        prompt: |
+          I'm learning Linux. Teach me how to figure out any unfamiliar command on my own. Act as instructor and cover:
+          1) `man <command>` — how to read a man page (NAME, SYNOPSIS, OPTIONS), and how to search inside it with `/` and quit with `q`.
+          2) `<command> --help` and when it's faster than man.
+          3) `apropos <keyword>` and `type <command>` to discover commands.
+          4) How to read the SYNOPSIS notation: `[optional]`, `<required>`, `...`.
+          Keep it under 400 words and use `ls` as the running example.
+          Then ask me 2 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on getting help: 3 questions, one at a time. Include a scenario:
+          "I half-remember a command for compressing files but not its name — how do I find it?"
+          Grade each answer briefly.
+        practice: "Run `man ls`, find what the `-S` option does by searching inside the page, then quit."
+      - slug: pipes-and-redirection
+        title: "Pipes and redirection"
+        goal: "Combine commands with pipes and send output to files using >, >>, and 2>."
+        prompt: |
+          I'm learning Linux and I can run single commands. Teach me how to combine them. Act as instructor and explain:
+          1) The three standard streams: stdin, stdout, stderr — what each is.
+          2) The pipe `|`: sending one command's output into another, with the example `ls -l | grep ".txt"`.
+          3) Redirection: `>` (overwrite), `>>` (append), and `2>` (capture errors) to files, plus `/dev/null`.
+          4) One combined example: `cat /etc/passwd | grep root > result.txt`.
+          Keep it under 450 words.
+          Then ask me 3 check questions, one at a time, waiting for each answer.
+        quiz_prompt: |
+          Quiz me on pipes and redirection: 4 questions, one at a time. Include a scenario:
+          "I want to save a command's normal output to a file but throw away its error messages — what do I write?"
+          Grade each answer.
+        practice: "Run `ls /etc | grep conf | wc -l` and explain out loud what each of the three stages did."
+      - slug: finding-files-and-text
+        title: "Finding files and searching text"
+        goal: "Locate files with find and search inside files with grep, including basic patterns."
+        prompt: |
+          I'm learning Linux. Teach me to find things on the system. Act as instructor and cover:
+          1) `find` — search by name (`find . -name "*.log"`), by type (`-type f`/`-type d`), and run an action (`-delete` carefully).
+          2) `grep` — search text inside files, with `-i` (ignore case), `-r` (recursive), `-n` (line numbers), `-v` (invert).
+          3) A simple intro to what a "pattern" is (literal text vs a wildcard `*` in the shell vs grep regex) — keep it light.
+          4) One combined example: `grep -rn "TODO" .`
+          Keep it under 450 words.
+          Then ask me 2 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on find and grep: 4 questions, one at a time. Include a scenario:
+          "I need every .conf file under /etc that contains the word 'timeout' — how do I find them?"
+          Grade each answer.
+        practice: "Use grep -rni to find every line containing 'host' under /etc, then count the matches with wc -l."
   - title: Files, Permissions, Users
-    steps: []
+    steps:
+      - slug: creating-and-managing-files
+        title: "Creating, copying, moving, deleting"
+        goal: "Manage files and directories with touch, mkdir, cp, mv, rm and understand the danger of rm -rf."
+        prompt: |
+          I'm learning Linux. Teach me to create and manage files from the command line. Act as instructor and cover:
+          1) `touch` (create empty file / update timestamp), `mkdir` (and `mkdir -p` for nested dirs).
+          2) `cp` (with `-r` for directories), `mv` (rename and move are the same command).
+          3) `rm` and `rmdir`, and a clear, serious warning about `rm -rf` — why there's no recycle bin.
+          4) The `-i` interactive flag as a safety net.
+          Keep it under 450 words, with a tiny worked example creating then cleaning up a folder.
+          Then ask me 2 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on file management: 4 questions, one at a time. Include a scenario:
+          "I want to rename report.txt to report-final.txt — which command, and why isn't there a 'rename' command?"
+          Grade each answer.
+        practice: "Create a folder `playground` with `mkdir -p playground/sub`, copy a file into it, move it, then delete the whole folder with `rm -r`."
+      - slug: understanding-permissions
+        title: "Reading file permissions"
+        goal: "Read the rwx permission string from ls -l and explain owner, group, and others."
+        prompt: |
+          I'm learning Linux. I keep seeing strings like `-rw-r--r--` in `ls -l` output and don't understand them.
+          Act as instructor and explain:
+          1) How to break down `-rw-r--r--`: the first character (file type), then three groups of rwx for owner / group / others.
+          2) What read, write, and execute actually mean — separately for files vs directories (this trips people up).
+          3) How owner and group relate to a file, shown in the `ls -l` columns.
+          Use a concrete `ls -l` line and decode it character by character.
+          Keep it under 450 words.
+          Then ask me 3 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on reading permissions: 4 questions, one at a time. Include a scenario:
+          "A file shows `-rwxr-x---`. Can a user who is NOT the owner but IS in the group read it? Execute it? Write it?"
+          Grade each answer.
+        practice: "Run `ls -l /etc/passwd /bin/ls` and decode each permission string out loud (owner/group/others)."
+      - slug: changing-permissions
+        title: "Changing permissions and ownership"
+        goal: "Modify permissions with chmod (symbolic and numeric) and ownership with chown."
+        prompt: |
+          I'm learning Linux and I understand how to READ permissions. Now teach me to change them. Act as instructor and cover:
+          1) `chmod` symbolic form: `chmod u+x file`, `chmod go-w file`, `chmod a+r file`.
+          2) `chmod` numeric form: how 4/2/1 map to r/w/x, so `755`, `644`, `600` make sense — show how to compute one.
+          3) `chown user:group file` and `chmod -R` for recursion (with a caution).
+          4) When making a script executable (`chmod +x script.sh`) is needed.
+          Keep it under 450 words.
+          Then ask me 3 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on chmod/chown: 4 questions, one at a time. Include a scenario:
+          "I want the owner to read+write, and everyone else to only read. What numeric mode is that, and what's the chmod command?"
+          Grade each answer.
+        practice: "Create a file, give it mode 600 with `chmod 600`, verify with ls -l, then change it to 644 and verify again."
+      - slug: users-and-sudo
+        title: "Users, root, and sudo"
+        goal: "Explain the root user, the principle of least privilege, and how sudo works."
+        prompt: |
+          I'm learning Linux. Teach me about users and privileges. Act as instructor and explain:
+          1) The difference between a normal user and `root` (the superuser), and why you don't log in as root all day.
+          2) `sudo` — running a single command with elevated privileges, why it asks for YOUR password, and `sudo -i` / `sudo su`.
+          3) Where users are defined (`/etc/passwd`) and groups (`/etc/group`) at a high level — no need to edit them by hand.
+          4) The idea of "least privilege" in one sentence.
+          Keep it under 450 words.
+          Then ask me 2 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on users and sudo: 4 questions, one at a time. Include a scenario:
+          "A tutorial says to run `apt install something` and it fails with 'Permission denied'. What's likely wrong and what do I prepend?"
+          Grade each answer.
+        practice: "Run `whoami`, then `id` to see your groups, then run any harmless command with `sudo` (e.g. `sudo ls /root`) and observe the password prompt."
+      - slug: links-and-disk-usage
+        title: "Links and disk usage"
+        goal: "Understand symbolic links and inspect disk usage with df and du."
+        prompt: |
+          I'm learning Linux. Teach me about links and how to see where disk space goes. Act as instructor and cover:
+          1) Symbolic (soft) links with `ln -s target linkname` — what they are and one real use (e.g. pointing `current` at a versioned folder). Mention hard links exist but keep it brief.
+          2) `df -h` to see free space per filesystem/mount, and how to read it.
+          3) `du -sh <dir>` to see how big a directory is, and `du -h --max-depth=1` to find the big subfolders.
+          Keep it under 400 words.
+          Then ask me 2 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on links and disk usage: 3 questions, one at a time. Include a scenario:
+          "My disk is full and I want to find which folder under /var is eating the space — what command do I run?"
+          Grade each answer.
+        practice: "Run `df -h` to see your mounts, then `du -sh ~` to measure your home directory, then create a symlink with `ln -s` and inspect it with `ls -l`."
   - title: Processes & systemd Services
-    steps: []
+    steps:
+      - slug: viewing-processes
+        title: "Viewing running processes"
+        goal: "List and inspect running processes with ps, top/htop, and understand PIDs."
+        prompt: |
+          I'm learning Linux. Teach me how to see what's running on the system. Act as instructor and cover:
+          1) What a "process" is and what a PID (process ID) is.
+          2) `ps aux` — how to read the key columns (USER, PID, %CPU, %MEM, COMMAND).
+          3) `top` (and `htop` if installed) — a live view; how to read CPU and memory and quit with `q`.
+          4) Combining with grep: `ps aux | grep firefox` to find a specific process.
+          Keep it under 450 words.
+          Then ask me 2 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on viewing processes: 4 questions, one at a time. Include a scenario:
+          "Something is using all my CPU but I don't know what. Which command shows me the top consumer live?"
+          Grade each answer.
+        practice: "Run `top` and identify the process using the most CPU, then quit, then find its PID with `ps aux | grep`."
+      - slug: managing-processes
+        title: "Stopping and signaling processes"
+        goal: "Terminate processes with kill, kill -9, and pkill, and understand foreground/background and jobs."
+        prompt: |
+          I'm learning Linux and I can see processes. Now teach me to control them. Act as instructor and cover:
+          1) Signals at a basic level: `kill <PID>` (polite, SIGTERM) vs `kill -9 <PID>` (force, SIGKILL) and why you try TERM first.
+          2) `pkill <name>` and `killall <name>` to kill by name.
+          3) Foreground vs background: `&` to launch in background, `Ctrl+C` to stop, `Ctrl+Z` to suspend, `jobs`, `fg`, `bg`.
+          Keep it under 450 words with a clear warning that -9 gives no chance to clean up.
+          Then ask me 3 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on signaling processes: 4 questions, one at a time. Include a scenario:
+          "A program is frozen and `kill <PID>` did nothing after 10 seconds. What do I try next and what's the trade-off?"
+          Grade each answer.
+        practice: "Start a long-running command like `sleep 300 &`, find it with `jobs` and `ps`, then terminate it with `kill`."
+      - slug: what-is-systemd
+        title: "What systemd and services are"
+        goal: "Explain what systemd is, what a service (unit) is, and why background programs run as services."
+        prompt: |
+          I'm learning Linux. Teach me what systemd is. Act as instructor and explain:
+          1) What an "init system" does and that systemd is the one most modern distros use (it's PID 1).
+          2) What a "service" / "unit" is — a long-running background program managed by systemd (e.g. ssh, nginx, docker).
+          3) Why you'd run something as a service instead of starting it by hand (auto-start on boot, restart on crash, logging).
+          4) The difference between a service being "enabled" (starts at boot) and "active/running" (running now).
+          Keep it under 450 words, no deep internals.
+          Then ask me 2 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on systemd basics: 4 questions, one at a time. Include a scenario:
+          "I installed a web server. It runs now but after a reboot it's gone. What concept did I miss — and is that 'enabled' or 'active'?"
+          Grade each answer.
+        practice: "Run `systemctl list-units --type=service --state=running` and pick one service you recognize; note its name for the next step."
+      - slug: controlling-services
+        title: "Controlling services with systemctl"
+        goal: "Start, stop, enable, disable, and check the status of services using systemctl."
+        prompt: |
+          I'm learning Linux and I understand what a service is. Now teach me to control services. Act as instructor and cover:
+          1) `systemctl status <service>` — how to read it (loaded, active/inactive, enabled/disabled, recent log lines).
+          2) `systemctl start` / `stop` / `restart` and when each is used, and why most need `sudo`.
+          3) `systemctl enable` / `disable` (boot behavior) vs start/stop (right now) — keep the distinction sharp.
+          4) `systemctl daemon-reload` (mention briefly, after editing a unit).
+          Use `ssh` (or `sshd`) as the running example.
+          Keep it under 450 words.
+          Then ask me 3 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on systemctl: 4 questions, one at a time. Include a scenario:
+          "I want a service running right now AND every time the machine boots. Which two commands do I run?"
+          Grade each answer.
+        practice: "Run `systemctl status` on a service you found earlier (e.g. `systemctl status ssh`) and identify whether it is active and enabled."
+      - slug: reading-logs
+        title: "Reading logs with journalctl"
+        goal: "Inspect system and service logs using journalctl, including filtering and following live output."
+        prompt: |
+          I'm learning Linux. Teach me to read logs so I can debug problems. Act as instructor and cover:
+          1) `journalctl` for the systemd journal — the basic command and why you usually narrow it down.
+          2) Filtering: `journalctl -u <service>` (one service), `journalctl -b` (this boot), `journalctl --since "10 min ago"`.
+          3) `journalctl -f` to follow live (like tail -f), and quitting with Ctrl+C.
+          4) A quick note on the older `/var/log/` text files (e.g. `/var/log/syslog`) and using `tail -f` on them.
+          Keep it under 450 words.
+          Then ask me 2 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on logs: 4 questions, one at a time. Include a scenario:
+          "A service keeps crashing. How do I watch ONLY that service's logs as it happens?"
+          Grade each answer.
+        practice: "Run `journalctl -u ssh --since \"1 hour ago\"` (use a service you have), then try `journalctl -f` and stop it with Ctrl+C."
   - title: Networking Essentials
-    steps: []
+    steps:
+      - slug: network-basics
+        title: "IP addresses, ports, and DNS"
+        goal: "Explain IP addresses, ports, and DNS at a practical level and inspect your own interfaces with ip."
+        prompt: |
+          I'm learning Linux networking from scratch. Act as instructor and explain, practically:
+          1) What an IP address is (and the rough idea of private vs public, e.g. 192.168.x.x).
+          2) What a "port" is and why one machine runs many services on different ports (22 ssh, 80 http, 443 https).
+          3) What DNS does — turning a name like example.com into an IP.
+          4) How to see my own machine's IP and interfaces with `ip addr` (and that `ifconfig` is the old equivalent).
+          Keep it under 450 words, concrete, no OSI-model theory dump.
+          Then ask me 3 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on networking basics: 4 questions, one at a time. Include a scenario:
+          "A service runs on my server at port 8080. A friend on the same network wants to reach it — what two pieces of information do they need?"
+          Grade each answer.
+        practice: "Run `ip addr` and find your machine's IP address on its main interface; note whether it's a private (192.168 / 10.x) address."
+      - slug: testing-connectivity
+        title: "Testing connectivity"
+        goal: "Diagnose network reachability with ping, and resolve names with the DNS tools dig/host."
+        prompt: |
+          I'm learning Linux networking. Teach me to test whether things are reachable. Act as instructor and cover:
+          1) `ping <host>` — what it actually tests (reachability + latency), reading the round-trip times, and stopping with Ctrl+C.
+          2) When ping fails but the host is fine (firewalls blocking ICMP) — so "ping fails" ≠ "down".
+          3) Resolving names: `dig example.com` or `host example.com` to see the IP DNS returns.
+          4) A quick mental model: name resolution (DNS) is a separate step from reachability (ping).
+          Keep it under 450 words.
+          Then ask me 2 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on connectivity testing: 4 questions, one at a time. Include a scenario:
+          "I can ping 8.8.8.8 but I can't ping google.com. What's broken — connectivity or DNS?"
+          Grade each answer.
+        practice: "Ping 8.8.8.8 a few times and read the latency, then run `dig` or `host` on a website and find the IP it returns."
+      - slug: ports-and-connections
+        title: "Seeing open ports and connections"
+        goal: "Discover which ports are listening and which programs use them with ss and lsof."
+        prompt: |
+          I'm learning Linux networking. Teach me to see what's listening and connected on my machine. Act as instructor and cover:
+          1) `ss -tulpn` — break down each flag and how to read the output (which port, which process is listening). Mention `netstat` is the older equivalent.
+          2) The idea of a "listening" socket vs an "established" connection.
+          3) `lsof -i :8080` to find what's using a specific port.
+          4) Why this matters: confirming a service is actually up and on the expected port.
+          Keep it under 450 words.
+          Then ask me 2 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on ports and connections: 4 questions, one at a time. Include a scenario:
+          "I started a web app but the browser can't connect. How do I check from the server whether anything is actually listening on port 8080?"
+          Grade each answer.
+        practice: "Run `ss -tulpn` (with sudo if needed) and identify one listening port and the program behind it."
+      - slug: transferring-and-fetching
+        title: "Fetching and transferring data"
+        goal: "Download from URLs with curl/wget and copy files between machines with scp."
+        prompt: |
+          I'm learning Linux. Teach me to move data over the network. Act as instructor and cover:
+          1) `curl <url>` — fetch a URL, `curl -O` to save it, and `-I` to see just response headers (great for testing an API/endpoint).
+          2) `wget <url>` — the simpler "just download this file" tool, and how it differs from curl in spirit.
+          3) `scp file user@host:/path` — copying a file to/from a remote machine over SSH, and `scp -r` for directories.
+          Keep it under 450 words with one example each.
+          Then ask me 2 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on curl/wget/scp: 4 questions, one at a time. Include a scenario:
+          "I want to check whether my web service returns HTTP 200 without downloading the whole page — which command and flag?"
+          Grade each answer.
+        practice: "Use `curl -I` against a website and read the status line and headers, then download a small file with either curl -O or wget."
+      - slug: ssh-essentials
+        title: "Connecting with SSH"
+        goal: "Log into remote machines with ssh and understand the basics of key-based authentication."
+        prompt: |
+          I'm learning Linux. Teach me SSH, which I'll use to log into servers. Act as instructor and cover:
+          1) `ssh user@host` (and `-p <port>` for non-default ports) — what a remote shell session is.
+          2) The host-key "are you sure you want to continue connecting?" prompt the first time, and why it exists.
+          3) Key-based auth basics: a public/private key pair, `ssh-keygen`, and the idea of copying your public key to the server (`ssh-copy-id`) so you don't type a password.
+          4) Why keys are safer than passwords, in one or two sentences.
+          Keep it under 450 words.
+          Then ask me 3 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on SSH: 4 questions, one at a time. Include a scenario:
+          "I want to connect to a server on port 2222 as user 'deploy' without typing a password every time. What do I set up?"
+          Grade each answer.
+        practice: "If you have another machine or a VM, generate a key with `ssh-keygen`, then `ssh user@host` into it; otherwise run `ssh-keygen` and inspect the generated public key with `cat ~/.ssh/id_*.pub`."
   - title: Shell Scripting
-    steps: []
+    steps:
+      - slug: first-shell-script
+        title: "Writing your first script"
+        goal: "Create, make executable, and run a basic bash script with a shebang line."
+        prompt: |
+          I'm learning Linux and I know the basic commands. Teach me to put them in a script. Act as instructor and cover:
+          1) What a shell script is (a text file of commands) and the shebang line `#!/bin/bash`.
+          2) Creating the file, making it executable with `chmod +x`, and running it with `./script.sh` (and why the `./` is needed).
+          3) `echo` for output and `#` for comments.
+          4) Walk me through a tiny complete `hello.sh` that prints a message and the current date (`date`).
+          Keep it under 450 words.
+          Then ask me 2 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on basic scripts: 4 questions, one at a time. Include a scenario:
+          "I wrote a script and `./run.sh` says 'Permission denied'. What did I forget?"
+          Grade each answer.
+        practice: "Write a `hello.sh` with a shebang that echoes a greeting and the output of `date`, chmod +x it, and run it with ./hello.sh."
+      - slug: variables-and-input
+        title: "Variables and user input"
+        goal: "Use variables, command substitution, and read user input in a script."
+        prompt: |
+          I'm learning bash scripting. Teach me variables and input. Act as instructor and cover:
+          1) Defining a variable (`name="Sam"`, NO spaces around `=`) and using it (`echo "$name"`), and why you quote `"$name"`.
+          2) Command substitution: `today=$(date +%F)` to capture a command's output into a variable.
+          3) Reading input: `read -p "Your name: " name` and then using it.
+          4) Special variables for arguments: `$1`, `$2`, `$@`, `$#`.
+          Keep it under 450 words with a tiny script that greets a name passed as `$1`.
+          Then ask me 3 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on variables and input: 4 questions, one at a time. Include a scenario:
+          "A script run as `./greet.sh Alice` should print 'Hello Alice'. Which variable holds 'Alice', and why must I quote it?"
+          Grade each answer.
+        practice: "Write a script that reads a name with `read` (or takes it as $1) and prints a greeting plus today's date captured via $(date)."
+      - slug: conditionals
+        title: "Conditionals and tests"
+        goal: "Make decisions in scripts with if/elif/else and the test operators for files and strings."
+        prompt: |
+          I'm learning bash scripting and I can use variables. Teach me to make decisions. Act as instructor and cover:
+          1) `if ... then ... elif ... else ... fi` structure and indentation.
+          2) The test brackets `[ ... ]`: numeric tests (`-eq`, `-lt`, `-gt`), string tests (`=`, `-z`), and file tests (`-f`, `-d`, `-e`).
+          3) Why spaces inside `[ ]` matter and why you quote variables in tests.
+          4) Exit status `$?` in one sentence (0 = success).
+          Walk through a script that checks if a file exists and prints a different message either way.
+          Keep it under 450 words.
+          Then ask me 3 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on conditionals: 4 questions, one at a time. Include a scenario:
+          "I want a script to print 'missing' if /etc/myapp.conf doesn't exist. Which test operator and structure do I use?"
+          Grade each answer.
+        practice: "Write a script that takes a filename as $1 and prints whether it exists (use `[ -e \"$1\" ]`), testing it on a real file and a fake one."
+      - slug: loops
+        title: "Loops"
+        goal: "Repeat actions with for and while loops over lists and files."
+        prompt: |
+          I'm learning bash scripting and I understand conditionals. Teach me loops. Act as instructor and cover:
+          1) `for` loop over a list: `for f in *.txt; do ... done`, and looping over arguments `"$@"`.
+          2) `while` loop with a condition, and the common `while read line; do ... done < file` pattern to process a file line by line.
+          3) `break` and `continue` briefly.
+          4) A worked example: loop over all `.log` files in a directory and print each filename and its line count (`wc -l`).
+          Keep it under 450 words.
+          Then ask me 3 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on loops: 4 questions, one at a time. Include a scenario:
+          "I want to run the same backup command on every .conf file in a folder. Which loop, and how do I reference each file?"
+          Grade each answer.
+        practice: "Write a for loop that prints each .txt file in a directory along with its line count using wc -l."
+      - slug: robust-scripts
+        title: "Writing robust, safe scripts"
+        goal: "Make scripts safer and more reliable with set -euo pipefail, quoting, exit codes, and basic functions."
+        prompt: |
+          I'm learning bash scripting and I can write loops and conditionals. Teach me to make scripts robust. Act as instructor and cover:
+          1) `set -euo pipefail` at the top — what each part does (exit on error, on unset variable, on pipe failure) and why it prevents silent disasters.
+          2) Always quoting variables (`"$var"`) to avoid word-splitting and globbing bugs, with a one-line example of what breaks.
+          3) Defining and calling a simple function.
+          4) Returning a meaningful exit code with `exit 0` / `exit 1`.
+          Keep it under 450 words.
+          Then ask me 3 check questions one at a time and wait.
+        quiz_prompt: |
+          Quiz me on robust scripts: 4 questions, one at a time. Include a scenario:
+          "A script with an unset variable `rm -rf $DIR/` deleted the wrong thing. Which two habits from this lesson would have prevented it?"
+          Grade each answer.
+        practice: "Take an earlier script of yours, add `set -euo pipefail` and quote every variable, then run it again to confirm it still works."

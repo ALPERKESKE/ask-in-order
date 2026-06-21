@@ -2,16 +2,331 @@ id: docker
 order: 3
 title: Docker
 tagline: From "it works on my machine" to images, containers, compose and production habits.
-status: skeleton
+status: ready
 color: "#0891b2"
 modules:
   - title: Foundations — Images and Containers
-    steps: []
+    steps:
+      - slug: what-problem-docker-solves
+        title: "What problem Docker actually solves"
+        goal: "Explain in your own words what Docker does, the 'works on my machine' problem it solves, and how a container differs from a virtual machine."
+        prompt: |
+          I'm starting a structured learning path for Docker and I know almost nothing about it.
+          Act as my instructor. Explain:
+          1) The core problem Docker solves — why "it works on my machine" happens and how packaging an app with its dependencies fixes it.
+          2) What a container is at a high level, and three concrete situations where teams reach for Docker (consistent dev environments, shipping a web app, running throwaway tools) — one short example each.
+          3) How a container differs from a virtual machine (shared kernel, weight, startup time) — keep this simple, no deep kernel theory yet.
+          Keep it under 500 words, plain language, no marketing.
+          Then ask me 2 short questions to check I understood, one at a time, and wait for my answer before continuing.
+        quiz_prompt: |
+          Quiz me on "what Docker solves": 3 questions, one at a time. Include one scenario question
+          ("a team has bugs that only appear on the test server — could Docker help, why?"). Grade each answer briefly before the next.
+        practice: "Install Docker (Docker Desktop or Docker Engine) and run `docker run hello-world`; read the output it prints."
+      - slug: images-vs-containers
+        title: "Images vs containers"
+        goal: "Clearly distinguish an image (the blueprint) from a container (a running instance), and describe their lifecycle."
+        prompt: |
+          I'm learning Docker. I keep confusing "image" and "container". Act as my instructor.
+          Explain:
+          1) What an image is (a read-only template / blueprint) versus what a container is (a running, writable instance of an image) — use an analogy like a class vs an object, or a recipe vs a cooked meal.
+          2) The basic lifecycle: pull an image, create/run a container from it, stop it, start it again, remove it.
+          3) Why you can run many containers from one image at the same time, and what's shared vs separate between them.
+          Keep it under 450 words.
+          Then ask me 2 check questions, one at a time, and wait for my answer.
+        quiz_prompt: |
+          Quiz me on images vs containers: 4 questions, one at a time. Include a scenario
+          ("I removed a container — is the image gone too?"). Grade each answer briefly.
+        practice: "Run `docker run -it ubuntu bash`, create a file inside it, exit, then start a fresh ubuntu container and confirm the file is NOT there."
+      - slug: docker-hub-and-tags
+        title: "Registries, Docker Hub and image tags"
+        goal: "Understand where images come from, how `image:tag` naming works, and why `latest` is risky."
+        prompt: |
+          I'm learning Docker. Act as my instructor and explain where images come from.
+          Cover:
+          1) What a registry is and what Docker Hub is, and the difference between official images, verified-publisher images, and random community images (and the trust implications).
+          2) How image naming works: `repository:tag`, the default `latest` tag, and why pinning a specific version (e.g. `nginx:1.27`) is safer than `latest` for reproducibility.
+          3) What `docker pull` does and how layers get cached locally so repeat pulls are fast.
+          Keep it under 450 words.
+          Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on registries and tags: 3 questions, one at a time. Include a scenario
+          ("two machines ran `docker pull myapp:latest` a month apart and behave differently — why?"). Grade each briefly.
+        practice: "Pull two specific tags of the same image (e.g. `python:3.11-slim` and `python:3.12-slim`) and compare their sizes with `docker images`."
+      - slug: core-container-commands
+        title: "The commands you'll use every day"
+        goal: "Run, list, inspect, log into, stop and remove containers fluently with the core CLI commands."
+        prompt: |
+          I'm learning Docker and want to get fluent with the everyday commands. Act as my instructor.
+          Walk me through, with a one-line example for each:
+          1) `docker run` and its most useful flags: `-d` (detached), `-it` (interactive), `--name`, `-p` (publish a port), `--rm` (auto-remove).
+          2) Inspecting what's running: `docker ps`, `docker ps -a`, `docker logs`, `docker exec -it <name> sh`.
+          3) Cleanup: `docker stop`, `docker rm`, `docker rmi`, and what `docker system prune` does (and why to be careful with it).
+          Keep examples concrete and short.
+          Then give me 2 quick check questions, one at a time, and wait for my answers.
+        quiz_prompt: |
+          Quiz me on core Docker commands: 4 questions, one at a time. Include a scenario
+          ("a container exited and I want to see why — which command?"). Grade each answer.
+        practice: "Run nginx detached with `docker run -d --name web -p 8080:80 nginx`, open http://localhost:8080, check `docker logs web`, then stop and remove it."
   - title: Building Images — Dockerfile
-    steps: []
+    steps:
+      - slug: first-dockerfile
+        title: "Your first Dockerfile"
+        goal: "Write a minimal Dockerfile and build it into an image you can run."
+        prompt: |
+          I'm learning to build my own Docker images. Act as my instructor.
+          Explain and show:
+          1) What a Dockerfile is — a text recipe of instructions that produces an image.
+          2) The essential instructions for a first image: `FROM`, `WORKDIR`, `COPY`, `RUN`, `CMD` — one sentence on what each does.
+          3) A complete tiny example Dockerfile for a simple app (pick a basic Node or Python "hello world" web server), then the `docker build -t myapp .` command and how to run the result.
+          Keep it under 500 words and explain the example line by line.
+          Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on a basic Dockerfile: 4 questions, one at a time. Include a scenario
+          ("what's the difference between RUN and CMD, and which runs at build time?"). Grade each answer.
+        practice: "Create a folder with a tiny web app and a Dockerfile, run `docker build -t myapp .`, then `docker run -p 8080:80 myapp` (or the app's port) and load it in a browser."
+      - slug: layers-and-caching
+        title: "Layers and build caching"
+        goal: "Explain how each Dockerfile instruction creates a layer, how the build cache works, and how to order instructions for fast rebuilds."
+        prompt: |
+          I'm learning Docker image internals. Act as my instructor and explain layers and caching.
+          Cover:
+          1) How each instruction in a Dockerfile creates a cached layer, and how images are stacks of read-only layers plus a thin writable layer at runtime.
+          2) How the build cache decides to reuse a layer vs rebuild it, and why a change to an early line invalidates everything after it.
+          3) The classic optimization: copy your dependency manifest (package.json / requirements.txt) and install dependencies BEFORE copying the rest of your source, so code changes don't bust the dependency-install cache. Show a before/after Dockerfile snippet.
+          Keep it under 500 words.
+          Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on layers and caching: 4 questions, one at a time. Include a scenario
+          ("I changed one line of source code and the whole npm install re-ran — why, and how do I fix the Dockerfile?"). Grade each answer.
+        practice: "Take a Dockerfile, build it, change one source file, rebuild, and watch which steps say CACHED; then reorder dependency install above the source COPY and rebuild to see the difference."
+      - slug: dockerignore-and-context
+        title: "Build context and .dockerignore"
+        goal: "Understand what the build context is and use .dockerignore to keep builds small and fast."
+        prompt: |
+          I'm learning Docker builds. Act as my instructor.
+          Explain:
+          1) What the "build context" is — the directory you pass to `docker build`, and the fact that everything in it gets sent to the Docker daemon.
+          2) Why a bloated context (node_modules, .git, large data files, secrets) makes builds slow and can leak files into your image.
+          3) How `.dockerignore` works (like `.gitignore`), with a sensible example for a typical web project.
+          Keep it under 400 words.
+          Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on build context and .dockerignore: 3 questions, one at a time. Include a scenario
+          ("my image is 1.5 GB and includes my local .git folder — what went wrong?"). Grade each answer.
+        practice: "Add a `.dockerignore` that excludes `.git`, `node_modules`, and any local env files, rebuild, and confirm the image got smaller and the build was faster."
+      - slug: multi-stage-builds
+        title: "Multi-stage builds for small images"
+        goal: "Use a multi-stage build to compile/build in one stage and ship only the artifact in a tiny final stage."
+        prompt: |
+          I'm learning to make Docker images small and clean. Act as my instructor.
+          Explain:
+          1) The problem: build tools, compilers and dev dependencies bloat the final image and increase attack surface.
+          2) The multi-stage pattern: one stage with the full toolchain that produces a build artifact, and a second small stage (e.g. a slim or distroless base) that copies only the artifact via `COPY --from=builder`.
+          3) A concrete example (compiled language or a frontend build) showing both stages and why the final image is much smaller.
+          Keep it under 500 words.
+          Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on multi-stage builds: 4 questions, one at a time. Include a scenario
+          ("my final image still contains gcc and the full source — how should I restructure the Dockerfile?"). Grade each answer.
+        practice: "Convert a single-stage Dockerfile to multi-stage, build both, and compare image sizes with `docker images`."
+      - slug: tagging-and-pushing
+        title: "Tagging and pushing your image"
+        goal: "Tag an image with a registry path and version, and push it so others (or a server) can pull it."
+        prompt: |
+          I'm learning to share Docker images. Act as my instructor.
+          Explain:
+          1) How to tag an image for a registry: the `registry/username/repo:version` format and why version tags (e.g. `:1.0.0`) plus an optional `:latest` are useful together.
+          2) The flow: `docker login`, `docker tag`, `docker push`, and how someone else pulls it.
+          3) A brief note on alternative registries (GitHub Container Registry, GitLab, self-hosted) and when you'd use a private registry.
+          Keep it under 400 words.
+          Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on tagging and pushing: 3 questions, one at a time. Include a scenario
+          ("I pushed `myapp:latest` twice with different code — how does someone know which version they're running?"). Grade each answer.
+        practice: "Create a free Docker Hub (or GHCR) account, tag your image with your username, and push it; then pull it on the same machine after removing the local copy."
   - title: Docker Compose
-    steps: []
+    steps:
+      - slug: why-compose
+        title: "Why Compose exists"
+        goal: "Explain why running multi-container apps by hand is painful and how a compose file declares the whole stack."
+        prompt: |
+          I'm learning Docker Compose. Act as my instructor.
+          Explain:
+          1) The pain of running a multi-service app (e.g. web app + database + cache) with separate `docker run` commands — long flags, ordering, manual networking.
+          2) What Docker Compose is: a single YAML file (`compose.yaml`) that declares all services, plus `docker compose up` / `down` to start and stop the whole stack.
+          3) The top-level structure of a compose file: `services`, and the idea that each service is roughly one container.
+          Keep it under 450 words.
+          Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on why Compose exists: 3 questions, one at a time. Include a scenario
+          ("a new teammate needs the full app stack running locally — how does Compose help vs a README of docker run commands?"). Grade each answer.
+        practice: "Pick a sample multi-service project (or just nginx + a small app) and sketch in plain notes which services it would have before writing any YAML."
+      - slug: writing-a-compose-file
+        title: "Writing a compose file"
+        goal: "Write a compose.yaml with two services and bring it up with one command."
+        prompt: |
+          I'm learning to write Docker Compose files. Act as my instructor.
+          Show and explain a complete `compose.yaml` for a small app talking to a database, covering these per-service keys:
+          1) `image` (or `build`), `ports`, `environment`, `depends_on`.
+          2) How services reach each other by service name over the default network Compose creates.
+          3) The commands: `docker compose up -d`, `docker compose ps`, `docker compose logs -f`, `docker compose down`.
+          Explain the example field by field. Keep it focused, under 500 words.
+          Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on compose files: 4 questions, one at a time. Include a scenario
+          ("my web service can't connect to the db at `localhost` — what hostname should it use instead and why?"). Grade each answer.
+        practice: "Write a compose.yaml with a web service and a Postgres (or MySQL) service, run `docker compose up -d`, and confirm both are running with `docker compose ps`."
+      - slug: env-and-config
+        title: "Environment variables and configuration"
+        goal: "Configure services with environment variables and a .env file instead of hardcoding values."
+        prompt: |
+          I'm learning to configure Docker Compose services. Act as my instructor.
+          Explain:
+          1) Passing configuration via the `environment` key, and the difference between hardcoding values vs reading them from a `.env` file with `${VAR}` interpolation.
+          2) Why secrets (passwords, API keys) should NOT be committed — keep them in a gitignored `.env`, and why even env vars aren't perfectly secret (anyone with docker access can read them).
+          3) A quick note that `env_file:` loads variables into the container, while the root `.env` is read by Compose itself for interpolation.
+          Keep it under 450 words.
+          Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on env and config: 3 questions, one at a time. Include a scenario
+          ("a teammate accidentally committed the database password in compose.yaml — what should change?"). Grade each answer.
+        practice: "Move a hardcoded password from your compose.yaml into a gitignored `.env` file, reference it with `${DB_PASSWORD}`, and confirm the stack still comes up."
+      - slug: compose-rebuild-workflow
+        title: "The everyday Compose workflow"
+        goal: "Develop with Compose smoothly: rebuild on changes, view logs, exec into containers, and tear down cleanly."
+        prompt: |
+          I'm using Docker Compose for local development. Act as my instructor.
+          Explain the day-to-day loop:
+          1) When you need `docker compose up --build` vs plain `up`, and what `docker compose down` removes (and what it leaves behind, like named volumes).
+          2) Watching one service's logs (`docker compose logs -f web`) and running a command inside a service (`docker compose exec web sh`).
+          3) Bind-mounting your source code into a container during development so edits show up without rebuilding, and the trade-off vs baking code into the image for production.
+          Keep it under 450 words.
+          Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on the Compose workflow: 4 questions, one at a time. Include a scenario
+          ("I changed my Dockerfile but `docker compose up` runs the old code — what did I forget?"). Grade each answer.
+        practice: "Add a bind mount of your source directory to your dev service, start the stack, edit a file, and confirm the change is reflected without rebuilding."
   - title: Networking & Volumes
-    steps: []
+    steps:
+      - slug: container-networking-basics
+        title: "How containers talk to each other"
+        goal: "Explain Docker networks, why containers on the same user-defined network reach each other by name, and how published ports work."
+        prompt: |
+          I'm learning Docker networking. Act as my instructor.
+          Explain:
+          1) The default bridge network vs a user-defined bridge network, and why containers on a user-defined network can reach each other by container/service name (built-in DNS) while the default bridge can't.
+          2) What `-p 8080:80` actually does — publishing a container port to the host, and the difference between a port being exposed inside Docker vs reachable from outside.
+          3) How Compose puts all services on one network automatically so they can talk by service name.
+          Keep it under 450 words.
+          Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on container networking: 4 questions, one at a time. Include a scenario
+          ("my app container connects to `db:5432` and it works in Compose but fails with two manual `docker run` commands — why?"). Grade each answer.
+        practice: "Create a user-defined network with `docker network create demo`, run two containers on it, and ping one from the other by name with `docker exec`."
+      - slug: persisting-data-volumes
+        title: "Persisting data with volumes"
+        goal: "Understand why container filesystems are ephemeral and use named volumes to keep data across container restarts."
+        prompt: |
+          I'm learning how Docker handles data. Act as my instructor.
+          Explain:
+          1) Why a container's writable layer is ephemeral — remove the container and its internal data is gone.
+          2) Named volumes: Docker-managed storage that survives container removal, ideal for databases; show `docker volume create`, mounting with `-v myvol:/var/lib/postgresql/data`, and the Compose `volumes:` equivalent.
+          3) Why you should NOT keep a database's data only inside the container, and what `docker compose down -v` does (deletes named volumes — be careful).
+          Keep it under 450 words.
+          Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on volumes: 4 questions, one at a time. Include a scenario
+          ("I recreated my database container and all my data vanished — what was missing?"). Grade each answer.
+        practice: "Run a Postgres container with a named volume, create a table and row, remove and recreate the container with the same volume, and confirm the data is still there."
+      - slug: bind-mounts-vs-volumes
+        title: "Bind mounts vs named volumes"
+        goal: "Choose correctly between bind mounts (host path) and named volumes (Docker-managed) for dev vs production."
+        prompt: |
+          I'm learning Docker storage options. Act as my instructor.
+          Compare:
+          1) Bind mounts (mapping a specific host directory into the container) vs named volumes (Docker-managed storage) — how each is written and where the data physically lives.
+          2) When to use each: bind mounts for live-editing source code in development; named volumes for persistent app data like databases in production.
+          3) Common gotchas: permissions/ownership issues with bind mounts, and the fact that a bind mount can shadow files baked into the image.
+          Keep it under 450 words.
+          Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on bind mounts vs volumes: 4 questions, one at a time. Include a scenario
+          ("on the server my container can't write to a bind-mounted folder — permission denied — what's likely happening?"). Grade each answer.
+        practice: "Set up the same service twice: once with a bind mount to a host folder and once with a named volume, write a file in each, and inspect where the data ends up on the host."
+      - slug: networking-volumes-in-compose
+        title: "Networks and volumes in Compose"
+        goal: "Declare named volumes and custom networks in a compose file and wire services to them."
+        prompt: |
+          I'm bringing networking and volumes together in Docker Compose. Act as my instructor.
+          Show a compose.yaml that:
+          1) Declares a top-level `volumes:` block and attaches a named volume to a database service's data directory.
+          2) Optionally defines a custom network under top-level `networks:` and attaches services to it, explaining when you'd split services across networks (e.g. isolating a database).
+          3) Persists database data across `docker compose down` and only loses it on `down -v`.
+          Explain the example field by field, under 500 words.
+          Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on networks and volumes in Compose: 4 questions, one at a time. Include a scenario
+          ("I want my database not reachable from outside but reachable by my app — how do I structure ports/networks?"). Grade each answer.
+        practice: "Update your compose.yaml so the database uses a named volume; run the stack, add data, `docker compose down`, `up` again, and confirm the data survived."
   - title: Production Habits
-    steps: []
+    steps:
+      - slug: smaller-safer-images
+        title: "Smaller, safer base images"
+        goal: "Pick lean base images, pin versions, and reduce image size and attack surface deliberately."
+        prompt: |
+          I'm learning to ship Docker images responsibly. Act as my instructor.
+          Explain:
+          1) Choosing a lean base: full vs `-slim` vs `alpine` vs distroless — the trade-offs (size, available tools, debugging, libc differences).
+          2) Why pinning exact base-image versions (not `latest`) matters for reproducible, predictable builds.
+          3) Practical size and surface reductions: fewer layers/cleanup in RUN steps, multi-stage builds (recap), and not installing build tools in the final image.
+          Keep it under 450 words.
+          Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on base images: 4 questions, one at a time. Include a scenario
+          ("my alpine-based image crashes with a weird library error that didn't happen on the slim image — what's a likely cause?"). Grade each answer.
+        practice: "Take an existing image, rebuild it on a `-slim` and an `alpine` base where feasible, and compare sizes and whether the app still runs."
+      - slug: running-as-non-root
+        title: "Don't run as root; healthchecks"
+        goal: "Run containers as a non-root user and add a healthcheck so the platform knows when the app is actually ready."
+        prompt: |
+          I'm learning to harden Docker containers. Act as my instructor.
+          Explain:
+          1) Why containers run as root by default and why that's a risk; how to create and switch to a non-root user with `USER` in the Dockerfile (and the file-ownership implications).
+          2) What a `HEALTHCHECK` is — how Docker/Compose use it to mark a container healthy/unhealthy, and a simple example checking an HTTP endpoint.
+          3) How `depends_on` with a health condition lets a service wait until its database is actually ready, not just started.
+          Keep it under 450 words.
+          Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on non-root and healthchecks: 4 questions, one at a time. Include a scenario
+          ("my web service starts before the database is ready and crashes on boot — how do healthchecks + depends_on fix this?"). Grade each answer.
+        practice: "Add a non-root `USER` and a `HEALTHCHECK` to a Dockerfile, rebuild, run it, and confirm the container shows `(healthy)` in `docker ps`."
+      - slug: logs-and-debugging
+        title: "Logs, debugging and resource limits"
+        goal: "Diagnose a misbehaving container with logs, exec, inspect and stats, and cap its memory/CPU."
+        prompt: |
+          I'm learning to operate Docker containers in production. Act as my instructor.
+          Explain:
+          1) Debugging a container: reading `docker logs`, getting a shell with `docker exec -it <c> sh`, and inspecting config/state with `docker inspect`.
+          2) Watching resource usage with `docker stats`, and setting limits (`--memory`, `--cpus`, or the Compose `deploy.resources` / `mem_limit`) so one container can't starve the host.
+          3) The idea of logging to stdout/stderr (the 12-factor way) and letting Docker's logging driver collect it, rather than writing log files inside the container.
+          Keep it under 500 words.
+          Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on logs and debugging: 4 questions, one at a time. Include a scenario
+          ("a container keeps restarting and getting OOM-killed — which commands do you run and what limit do you set?"). Grade each answer.
+        practice: "Run a container with `--memory=256m`, watch it in `docker stats`, then deliberately stress it (or just observe) and read its logs and `docker inspect` output."
+      - slug: restart-policies-and-deploy
+        title: "Restart policies and deploying a stack"
+        goal: "Use restart policies so containers survive crashes/reboots, and run a Compose stack durably on a server."
+        prompt: |
+          I'm learning to deploy Dockerized apps on a real server. Act as my instructor.
+          Explain:
+          1) Restart policies (`no`, `on-failure`, `always`, `unless-stopped`) — what each does and which to pick for a service that should come back after a crash or host reboot.
+          2) Running a Compose stack in the background on a server (`docker compose up -d`), updating it (pull new image, `up -d` to recreate changed services), and rolling back by pinning the previous tag.
+          3) A short pre-production checklist: pinned versions, volumes for data, secrets out of git, healthchecks, restart policy, resource limits.
+          Keep it under 500 words.
+          Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on restart policies and deploying: 4 questions, one at a time. Include a scenario
+          ("the server rebooted overnight and my app didn't come back up — what setting was wrong?"). Grade each answer.
+        practice: "Add `restart: unless-stopped` to your services, deploy with `docker compose up -d`, reboot your machine (or restart the Docker daemon), and confirm the stack comes back automatically."

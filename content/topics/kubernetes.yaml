@@ -2,16 +2,355 @@ id: kubernetes
 order: 2
 title: Kubernetes
 tagline: Containers at scale — pods, deployments, services, and running real workloads.
-status: skeleton
+status: ready
 color: "#2563eb"
 modules:
   - title: Foundations
-    steps: []
+    steps:
+      - slug: what-is-kubernetes
+        title: "What Kubernetes actually is"
+        goal: "Explain in your own words what Kubernetes does, the problem it solves beyond plain Docker, and when you do (and don't) need it."
+        prompt: |
+          I'm starting a structured learning path for Kubernetes. I already know Docker
+          (images, containers, docker run, docker compose), but I know almost nothing about Kubernetes.
+          Act as my instructor. Explain:
+          1) What Kubernetes is in one sentence, then the core problem it solves that Docker alone does NOT
+             (running many containers across many machines, restarting failed ones, scaling, rolling updates).
+          2) What "orchestration" means with a concrete story (e.g. one container dies at 3am — what happens with
+             plain Docker vs. with Kubernetes).
+          3) Three signs a project actually needs Kubernetes, and two signs it's overkill (so I don't cargo-cult it).
+          Keep it under 500 words, plain language, no marketing.
+          Then ask me 2 short questions to check I understood, one at a time, and wait for my answer before continuing.
+        quiz_prompt: |
+          Quiz me on "what Kubernetes is": 3 questions, one at a time. Include one scenario question
+          ("a team runs one container on one server with low traffic — should they adopt Kubernetes? why/why not?").
+          Grade each answer briefly before the next.
+        practice: "Write one paragraph describing a system (from work or a side project) and decide whether Kubernetes would help or be overkill, with one reason each way."
+      - slug: cluster-anatomy
+        title: "Cluster anatomy: control plane and nodes"
+        goal: "Describe the main pieces of a Kubernetes cluster and what each one is responsible for, without memorizing internals."
+        prompt: |
+          I'm learning Kubernetes and I understand it orchestrates containers across machines.
+          Act as my instructor. Explain the anatomy of a cluster:
+          1) The difference between the control plane and worker nodes.
+          2) The key control-plane parts at a high level — API server (the front door), etcd (the cluster's memory),
+             scheduler (decides where pods run), controller manager (keeps reality matching desired state).
+          3) What runs on a worker node — the kubelet and the container runtime.
+          4) The "desired state" idea: I declare what I want, and controllers continuously reconcile toward it.
+          Use a simple analogy (e.g. a restaurant kitchen) for the control plane vs. nodes.
+          Keep it under 500 words. Then ask me 2 check questions, one at a time, and wait for each answer.
+        quiz_prompt: |
+          Quiz me on cluster anatomy: 4 questions, one at a time. Include one scenario question
+          ("the scheduler is down but existing pods keep running — what still works and what breaks?").
+          Grade each answer briefly.
+        practice: "Draw (on paper or a whiteboard app) a cluster with one control plane and two worker nodes, labeling the API server, etcd, scheduler, kubelet, and a couple of pods."
+      - slug: local-sandbox
+        title: "Set up a local sandbox with kind or minikube"
+        goal: "Get a working single-machine Kubernetes cluster running locally and confirm kubectl can talk to it."
+        prompt: |
+          I'm learning Kubernetes and I want a local cluster on my own machine to practice on. I have Docker installed.
+          Act as my instructor and guide me. Cover:
+          1) The two common local options — kind (Kubernetes-in-Docker) and minikube — and a one-line recommendation
+             for someone who already has Docker (lean toward kind).
+          2) Step-by-step install for kind and kubectl on my OS (ask me which OS first).
+          3) The commands to create a cluster (kind create cluster) and to verify it works
+             (kubectl cluster-info, kubectl get nodes).
+          4) What "kubeconfig" and "context" mean — how kubectl knows which cluster to talk to.
+          Give exact commands I can copy. Then ask me to run them and tell me what healthy output looks like,
+          and wait for me to report back before continuing.
+        quiz_prompt: |
+          Quiz me on local clusters and kubectl basics: 3 questions, one at a time. Include one scenario question
+          ("kubectl get nodes returns 'connection refused' — name two likely causes and how to check each").
+          Grade each answer briefly.
+        practice: "Create a local cluster with kind, then run kubectl get nodes and confirm at least one node shows STATUS Ready."
+      - slug: kubectl-and-yaml
+        title: "kubectl and the declarative model"
+        goal: "Use kubectl confidently for the core verbs and understand imperative vs. declarative (apply) workflows."
+        prompt: |
+          I have a local Kubernetes cluster running and kubectl works.
+          Act as my instructor. Teach me how to actually drive the cluster:
+          1) The mental model: most things in Kubernetes are "objects" described in YAML, with apiVersion, kind,
+             metadata, and spec.
+          2) The core kubectl verbs with examples: get, describe, logs, apply -f, delete, and explain.
+          3) Imperative (kubectl run / kubectl create) vs. declarative (write YAML, kubectl apply -f) — and why
+             declarative is the real-world default.
+          4) Reading kubectl output: STATUS, RESTARTS, AGE, and using -o wide and -o yaml.
+          Keep it practical with copy-paste commands. Then ask me 2 questions, one at a time, and wait for answers.
+        quiz_prompt: |
+          Quiz me on kubectl and the declarative model: 4 questions, one at a time. Include one scenario question
+          ("you edited a YAML file and re-ran kubectl apply — what does Kubernetes do with the existing object?").
+          Grade each answer briefly.
+        practice: "Run kubectl explain pod.spec on your cluster, then kubectl get pods -A, and identify which namespace the system pods run in."
   - title: Workloads — Pods, Deployments, Jobs
-    steps: []
+    steps:
+      - slug: pods
+        title: "Pods: the smallest deployable unit"
+        goal: "Explain what a pod is, why it isn't the same as a container, and run one from a YAML manifest."
+        prompt: |
+          I'm learning Kubernetes workloads and I can use kubectl. I already know Docker containers.
+          Act as my instructor. Explain pods:
+          1) What a pod is and why Kubernetes schedules pods, not bare containers.
+          2) Why a pod can hold more than one container (shared network/IP and shared volumes) and the
+             "sidecar" idea, with one real example.
+          3) The lifecycle/phases (Pending, Running, Succeeded, Failed) and what CrashLoopBackOff means.
+          4) A minimal Pod YAML manifest (one nginx container) I can apply, line by line.
+          Keep it under 500 words plus the YAML. Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on pods: 4 questions, one at a time. Include one scenario question
+          ("a pod is stuck in Pending for 5 minutes — list two likely reasons and the command to investigate each").
+          Grade each answer briefly.
+        practice: "Apply a single-container Pod manifest to your cluster, then use kubectl describe pod and kubectl logs to inspect it, and finally delete it."
+      - slug: deployments
+        title: "Deployments: declarative, self-healing apps"
+        goal: "Understand why you rarely create bare pods, and use a Deployment to run and self-heal multiple replicas."
+        prompt: |
+          I can create a single pod in Kubernetes. Now I want to run apps the real way.
+          Act as my instructor. Explain Deployments:
+          1) Why bare pods are fragile (delete the node or the pod and it's gone) and how a Deployment fixes this.
+          2) The chain Deployment -> ReplicaSet -> Pods, and what "replicas: 3" actually guarantees.
+          3) The self-healing demo: if I delete a pod owned by a Deployment, what happens and why.
+          4) A minimal Deployment YAML (3 nginx replicas) with selector and template explained.
+          Keep it focused with copy-paste YAML and commands. Then ask me 2 questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on Deployments: 4 questions, one at a time. Include one scenario question
+          ("you set replicas to 3, then manually kill one pod — how many pods exist after 10 seconds and why?").
+          Grade each answer briefly.
+        practice: "Create a Deployment with 3 replicas, delete one pod with kubectl delete pod, then run kubectl get pods and confirm a replacement appears."
+      - slug: rollouts-and-rollbacks
+        title: "Rolling updates and rollbacks"
+        goal: "Roll out a new version of an app with zero downtime and roll back when something breaks."
+        prompt: |
+          I have a Deployment running multiple replicas in Kubernetes.
+          Act as my instructor. Teach me about updates:
+          1) How a rolling update works — new pods come up and old ones drain, controlled by maxSurge and maxUnavailable.
+          2) How to trigger an update (change the image in YAML and apply, or kubectl set image) and watch it with
+             kubectl rollout status.
+          3) How to undo a bad release with kubectl rollout undo, and how revision history works.
+          4) Why readiness probes matter during a rollout (don't send traffic to a pod that isn't ready) — high level,
+             we'll go deep on probes later.
+          Keep it practical. Then ask me 2 check questions, one at a time, and wait for answers.
+        quiz_prompt: |
+          Quiz me on rollouts: 4 questions, one at a time. Include one scenario question
+          ("a new image crashes on startup and the rollout is stuck — what command do you run to recover quickly?").
+          Grade each answer briefly.
+        practice: "Update your Deployment to a new image tag, watch kubectl rollout status, then run kubectl rollout undo and confirm the previous version returns."
+      - slug: jobs-and-cronjobs
+        title: "Jobs and CronJobs: run-to-completion work"
+        goal: "Run one-off batch tasks and scheduled tasks using Jobs and CronJobs instead of long-running Deployments."
+        prompt: |
+          I understand Deployments for long-running services in Kubernetes. Now I need to run tasks that finish.
+          Act as my instructor. Explain:
+          1) Why Deployments are wrong for batch work (they restart pods forever) and how a Job is different
+             (run to completion, then stop).
+          2) Job basics: completions, parallelism, and backoffLimit for retries.
+          3) CronJobs for scheduled work (cron syntax, schedule field) with a concrete example like a nightly backup.
+          4) A minimal Job YAML and a minimal CronJob YAML I can apply.
+          Keep it under 500 words plus YAML. Then ask me 2 questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on Jobs and CronJobs: 4 questions, one at a time. Include one scenario question
+          ("you need to send a weekly report every Monday at 6am — Job, CronJob, or Deployment, and what's the schedule field?").
+          Grade each answer briefly.
+        practice: "Create a Job that runs a container printing the date and exits, then verify with kubectl get jobs and kubectl logs that it completed."
   - title: Networking — Services and Ingress
-    steps: []
+    steps:
+      - slug: pod-networking
+        title: "How pods talk: the networking model"
+        goal: "Explain the flat pod network, why pod IPs are ephemeral, and why you need a stable address in front of pods."
+        prompt: |
+          I'm learning Kubernetes networking. I can run pods and Deployments.
+          Act as my instructor. Explain the networking model:
+          1) The core rule: every pod gets its own IP and pods can reach each other directly (a flat network), no NAT
+             between pods.
+          2) Why pod IPs are unreliable to depend on — pods come and go, IPs change on restart and rescheduling.
+          3) The problem this creates: how does one app reliably find another if the target's IP keeps changing?
+          4) A one-line preview that "Services" solve this with a stable name and IP (we cover it next).
+          Keep it under 450 words, plain language. Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on pod networking: 3 questions, one at a time. Include one scenario question
+          ("you hardcoded a pod's IP in your app config and it worked, then broke overnight — what happened?").
+          Grade each answer briefly.
+        practice: "Run two pods, find their IPs with kubectl get pods -o wide, exec into one and ping/curl the other's IP, then delete and recreate one pod and observe its IP change."
+      - slug: services
+        title: "Services: stable access to pods"
+        goal: "Use a Service to give a stable name and IP to a set of pods, and understand ClusterIP vs. NodePort vs. LoadBalancer."
+        prompt: |
+          I understand that pod IPs change in Kubernetes and I need something stable in front of them.
+          Act as my instructor. Explain Services:
+          1) How a Service uses a label selector to track a changing set of pods and load-balances across them.
+          2) The stable ClusterIP and the cluster-internal DNS name (e.g. my-svc.my-namespace.svc.cluster.local).
+          3) The three main Service types and when to use each: ClusterIP (internal only), NodePort (a port on every
+             node), LoadBalancer (cloud external IP).
+          4) A minimal Service YAML targeting a Deployment by label, explained.
+          Keep it practical with copy-paste YAML. Then ask me 2 questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on Services: 4 questions, one at a time. Include one scenario question
+          ("frontend pods can't reach your backend Service — name two things you'd check, including the selector").
+          Grade each answer briefly.
+        practice: "Expose your existing Deployment with a ClusterIP Service, then run a temporary pod and curl the Service by its DNS name to confirm load balancing."
+      - slug: ingress
+        title: "Ingress: HTTP routing into the cluster"
+        goal: "Route external HTTP traffic to multiple Services by hostname and path using an Ingress and an ingress controller."
+        prompt: |
+          I can expose Services inside my Kubernetes cluster. Now I want external users to reach my apps over HTTP/HTTPS.
+          Act as my instructor. Explain Ingress:
+          1) Why exposing many apps via NodePort or LoadBalancer per service gets expensive/ugly, and how Ingress
+             gives one entry point with host/path routing.
+          2) The split between the Ingress resource (the rules) and the ingress controller (the thing that actually
+             does the routing, e.g. nginx ingress) — and that you must install a controller.
+          3) A minimal Ingress YAML routing two paths to two Services, explained.
+          4) Where TLS/HTTPS termination fits at a high level.
+          Keep it focused with YAML. Then ask me 2 check questions, one at a time, and wait for answers.
+        quiz_prompt: |
+          Quiz me on Ingress: 4 questions, one at a time. Include one scenario question
+          ("you applied an Ingress resource but nothing routes — what's the most common missing piece?").
+          Grade each answer briefly.
+        practice: "Install an ingress controller in your kind/minikube cluster, then create an Ingress that routes a hostname to your Service and reach it with curl using the right Host header."
   - title: Configuration & Storage
-    steps: []
+    steps:
+      - slug: configmaps
+        title: "ConfigMaps: externalizing configuration"
+        goal: "Separate configuration from container images using ConfigMaps injected as env vars or mounted files."
+        prompt: |
+          I'm running apps in Kubernetes and I want to stop baking config into images.
+          Act as my instructor. Explain ConfigMaps:
+          1) Why config should be separate from the image (same image, different config per environment).
+          2) The two ways to consume a ConfigMap in a pod: as environment variables and as mounted files in a volume,
+             with a use case for each.
+          3) A minimal ConfigMap YAML and a pod/Deployment snippet that consumes it both ways.
+          4) The gotcha that env vars don't auto-update when a ConfigMap changes (the pod must restart), while
+             mounted files can update.
+          Keep it practical with YAML. Then ask me 2 questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on ConfigMaps: 4 questions, one at a time. Include one scenario question
+          ("you changed a value in a ConfigMap consumed as an env var but the app didn't pick it up — why, and the fix?").
+          Grade each answer briefly.
+        practice: "Create a ConfigMap with one key, inject it into a pod as an environment variable, and confirm it with kubectl exec ... -- env."
+      - slug: secrets
+        title: "Secrets: handling sensitive values"
+        goal: "Store and consume sensitive data with Secrets, and understand their real (limited) security guarantees."
+        prompt: |
+          I know how to use ConfigMaps in Kubernetes. Now I need to handle passwords and API keys.
+          Act as my instructor. Explain Secrets:
+          1) How Secrets resemble ConfigMaps but are meant for sensitive data, and how they're consumed (env vars or
+             mounted files).
+          2) The honest truth about security: by default Secret values are base64-encoded, NOT encrypted, and anyone
+             with read access to the namespace can read them — so RBAC and encryption-at-rest matter.
+          3) Why you should not commit Secret YAML with real values to git, and a one-line mention of sealed-secrets /
+             external secret managers as the real-world fix.
+          4) A minimal Secret YAML and how a pod consumes it.
+          Keep it under 500 words plus YAML. Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on Secrets: 4 questions, one at a time. Include one scenario question
+          ("a teammate says 'Secrets are encrypted so it's safe to commit them' — is that right? correct them").
+          Grade each answer briefly.
+        practice: "Create a Secret holding a fake API key, mount it into a pod as a file, and read the file with kubectl exec to confirm the value arrives."
+      - slug: volumes-and-persistence
+        title: "Volumes and persistent storage"
+        goal: "Understand why container storage is ephemeral and use PersistentVolumeClaims to keep data across pod restarts."
+        prompt: |
+          I'm running stateful-ish apps in Kubernetes and I'm worried about losing data.
+          Act as my instructor. Explain storage:
+          1) Why a container's filesystem is ephemeral — restart or reschedule a pod and local data is gone.
+          2) The difference between an emptyDir volume (lives with the pod) and persistent storage that outlives pods.
+          3) The PersistentVolume (PV) / PersistentVolumeClaim (PVC) / StorageClass model: I claim storage, the cluster
+             provisions it, my pod mounts it.
+          4) A minimal PVC YAML and a pod that mounts it, explained.
+          Keep it focused with YAML. Then ask me 2 questions, one at a time, and wait for answers.
+        quiz_prompt: |
+          Quiz me on volumes and persistence: 4 questions, one at a time. Include one scenario question
+          ("a database pod restarts and all its data is gone — what was almost certainly missing from its spec?").
+          Grade each answer briefly.
+        practice: "Create a PVC, mount it in a pod, write a file to the mounted path, delete and recreate the pod, and confirm the file is still there."
+      - slug: namespaces-and-rbac
+        title: "Namespaces and a first look at RBAC"
+        goal: "Organize cluster objects with namespaces and understand the basics of who-can-do-what via RBAC."
+        prompt: |
+          I'm comfortable creating Kubernetes objects but everything lives in one place. I want to organize and secure it.
+          Act as my instructor. Explain:
+          1) Namespaces: what they are, why teams use them (separate environments/teams, scope names and quotas),
+             and that some resources are namespaced while others are cluster-wide.
+          2) How to target a namespace with kubectl (-n) and set a default in your context.
+          3) RBAC at a high level: ServiceAccounts (identity for pods/users), Roles/ClusterRoles (sets of permissions),
+             and RoleBindings/ClusterRoleBindings (who gets them).
+          4) One concrete least-privilege example: a read-only role for a single namespace.
+          Keep it under 500 words. Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on namespaces and RBAC: 4 questions, one at a time. Include one scenario question
+          ("a CI pipeline should only read pods in the 'staging' namespace — which RBAC objects do you create?").
+          Grade each answer briefly.
+        practice: "Create a new namespace, deploy a pod into it, and list pods both with and without the -n flag to see how scoping works."
   - title: Operations — Health, Scaling, Debugging
-    steps: []
+    steps:
+      - slug: probes
+        title: "Health checks: liveness, readiness, startup probes"
+        goal: "Configure probes so Kubernetes restarts stuck containers and only routes traffic to ready ones."
+        prompt: |
+          I'm running apps in Kubernetes and I want them to self-heal and not receive traffic before they're ready.
+          Act as my instructor. Explain probes:
+          1) The three probe types and their distinct jobs: liveness (restart a stuck container), readiness (control
+             whether the pod gets Service traffic), startup (give slow-booting apps time before liveness kicks in).
+          2) Probe mechanisms: httpGet, tcpSocket, exec — and key timing fields (initialDelaySeconds, periodSeconds,
+             failureThreshold).
+          3) A common mistake: using a liveness probe that fails under load and causes restart storms — and how
+             readiness avoids that.
+          4) A pod snippet with a sensible liveness + readiness probe, explained.
+          Keep it practical with YAML. Then ask me 2 questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on probes: 4 questions, one at a time. Include one scenario question
+          ("under heavy load your app gets slow and pods keep restarting in a loop — which probe is likely misconfigured and how do you fix it?").
+          Grade each answer briefly.
+        practice: "Add a liveness and a readiness probe to a Deployment, then break the readiness endpoint and confirm with kubectl get pods that the pod shows not-Ready and is removed from the Service."
+      - slug: resources-and-autoscaling
+        title: "Resource requests, limits, and autoscaling"
+        goal: "Set CPU/memory requests and limits, and scale apps automatically based on load with the Horizontal Pod Autoscaler."
+        prompt: |
+          I'm running apps in Kubernetes and I want them to share nodes fairly and scale with demand.
+          Act as my instructor. Explain:
+          1) Requests vs. limits for CPU and memory: requests affect scheduling (where pods fit), limits cap usage —
+             and what happens when each is exceeded (CPU throttling vs. OOMKilled for memory).
+          2) Why missing requests lead to bad scheduling and noisy-neighbor problems.
+          3) Manual scaling (kubectl scale) vs. the Horizontal Pod Autoscaler (HPA) reacting to a target metric like CPU.
+          4) That HPA needs a metrics source (metrics-server) installed, with a minimal HPA example.
+          Keep it under 500 words plus YAML. Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on resources and autoscaling: 4 questions, one at a time. Include one scenario question
+          ("a pod keeps getting OOMKilled — is the problem its CPU request, memory limit, or readiness probe, and what do you adjust?").
+          Grade each answer briefly.
+        practice: "Add CPU/memory requests and limits to a Deployment, then create an HPA targeting CPU and use kubectl get hpa to watch it react (generate load if you can)."
+      - slug: debugging-workflow
+        title: "Debugging: a systematic workflow"
+        goal: "Diagnose a broken workload methodically using describe, logs, events, and exec instead of guessing."
+        prompt: |
+          Things break in my Kubernetes cluster and I want a repeatable way to debug instead of flailing.
+          Act as my instructor. Teach me a debugging workflow:
+          1) The first-look loop: kubectl get pods (status + RESTARTS), then kubectl describe pod (read the Events
+             section at the bottom — this is where the truth usually is).
+          2) Logs: kubectl logs, kubectl logs --previous for a crashed container, and multi-container/-c usage.
+          3) Getting inside: kubectl exec -it ... -- sh, and kubectl port-forward to test a service locally.
+          4) A quick decode of the usual suspects: CrashLoopBackOff, ImagePullBackOff, Pending, OOMKilled — likely
+             cause and first command for each.
+          Keep it as a practical checklist. Then ask me 2 questions, one at a time, and wait for answers.
+        quiz_prompt: |
+          Quiz me on debugging: 4 questions, one at a time. Include one scenario question
+          ("a pod shows ImagePullBackOff — walk me through the two most likely causes and the exact command that confirms which").
+          Grade each answer briefly.
+        practice: "Deliberately deploy a pod with a wrong image name, then use kubectl describe and the Events section to identify the failure, and fix it."
+      - slug: observability-and-next-steps
+        title: "Observability and where to go next"
+        goal: "Know how to see what's happening across a cluster and choose a sensible next learning direction."
+        prompt: |
+          I can deploy, expose, configure, and debug apps in Kubernetes. I want to round out the operational picture
+          and plan what to learn next.
+          Act as my instructor. Cover:
+          1) Observability basics: cluster events (kubectl get events), metrics (metrics-server, kubectl top), and the
+             role of logs/metrics/traces — plus one sentence on where Prometheus + Grafana fit.
+          2) Packaging and repeatability: why people move from raw YAML to Helm charts or Kustomize, at a high level.
+          3) A short, honest map of advanced topics to learn next (StatefulSets, operators/CRDs, network policies,
+             GitOps with Argo CD/Flux, managed clusters like EKS/GKE/AKS) and a suggested order for a beginner.
+          4) Two habits that keep a cluster healthy.
+          Keep it under 600 words. Then ask me 2 check questions, one at a time, and wait.
+        quiz_prompt: |
+          Quiz me on observability and next steps: 4 questions, one at a time. Include one scenario question
+          ("your team copy-pastes near-identical YAML for dev/staging/prod and keeps making mistakes — what tool category solves this?").
+          Grade each answer briefly.
+        practice: "Run kubectl top pods (after metrics-server is installed) and kubectl get events --sort-by=.lastTimestamp on your cluster, then write down two things you learned about its current state."
