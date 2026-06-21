@@ -496,11 +496,15 @@ modules:
              | tstats count where index=_internal by sourcetype | sort -count
           3) The hard limit: tstats only sees indexed fields (index, sourcetype, source, host, _time) or
              accelerated data-model fields — NOT arbitrary search-time-extracted fields.
-          4) prestats=t feeding timechart, and | tstats ... from datamodel=<name> for accelerated models.
+          4) prestats=t feeding timechart, and | tstats ... FROM datamodel=<name> for accelerated models;
+             with a data model, summariesonly=true restricts results to the accelerated range only.
           5) When to reach for it: dashboard panels and wide time ranges where stats is too slow.
           Then have me convert one of my earlier stats searches to tstats and compare.
-          The gotcha to teach me: point tstats at a search-time field and it silently returns nothing —
-          it's metadata-only, so it can't see fields that only exist after extraction.
+          Two gotchas to teach me:
+          - Point tstats at a search-time field and it silently returns nothing — it's metadata-only, so
+            it can't see fields that only exist after extraction.
+          - tstats (and mstats/mpreview) can be disabled by "field filters" that an admin sets to protect
+            sensitive data — so a tstats that works for an admin may return nothing for a restricted role.
         quiz_prompt: |
           Quiz me on tstats: 4 questions one at a time — why it's fast, which fields it can use, one
           "will this tstats work?" trap with a search-time field, and when you'd choose it over stats.
