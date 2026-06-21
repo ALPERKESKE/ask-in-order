@@ -7,6 +7,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "validate": "node scripts/validate.mjs",
+    "ensure-ids": "node scripts/ensure-ids.mjs",
     "health": "node scripts/path-health.mjs",
     "triage": "node scripts/triage.mjs",
     "mcp": "node mcp/server.mjs",

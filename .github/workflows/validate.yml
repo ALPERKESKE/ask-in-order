@@ -1,0 +1,26 @@
+name: validate content
+
+# Gate every PR and push: bad content (broken YAML, missing ids/fields, dup
+# slugs/ids) must not reach main, since the site and the MCP server both read
+# content/topics/*.yaml as the source of truth.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: every step has an immutable id
+        run: node scripts/ensure-ids.mjs --check
+      - name: content schema + integrity
+        run: node scripts/validate.mjs
+      - name: site builds
+        run: npm run build
