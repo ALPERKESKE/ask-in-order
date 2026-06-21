@@ -101,9 +101,15 @@ modules:
         prompt: |
           I'm learning SPL (Splunk's search language). I can run basic searches on index=_internal.
           Act as my instructor and teach me the building blocks:
-          1) Bare keywords vs field=value searches — when does each match?
-          2) Boolean operators AND/OR/NOT (and that AND is implicit), parentheses, wildcards.
+          1) Bare keywords vs field=value searches — when does each match? Cover the subtlety that
+             keyword matching is case-insensitive, that bare keywords match terms anywhere in _raw,
+             and that field NAMES are case-sensitive while field VALUES generally are not.
+          2) Boolean operators AND/OR/NOT (and that AND is implicit), parentheses, wildcards — and that a
+             LEADING wildcard (*error) is slow because it can't use the index.
           3) The pipe | — explain it with a Unix-pipeline analogy: search first, then transform.
+          4) The performance habit that follows: put your filters (index, sourcetype, keywords,
+             field=value) in the BASE search BEFORE the first pipe so the indexers do the work; filtering
+             after a pipe with search/where re-processes events you already pulled. Show a slow-vs-fast pair.
           Use index=_internal in every example so I can run them immediately.
           Give me 3 exercises of increasing difficulty ("find all ERROR events from sourcetype X in the
           last hour", etc.), one at a time, and check my SPL before giving me the next one.
@@ -121,7 +127,10 @@ modules:
           Act as my instructor and teach me how to shape results:
           1) How Splunk auto-extracts fields at search time (key=value pairs, JSON) and when it can't.
           2) The commands fields, table, rename, dedup — one runnable index=_internal example each,
-             and the difference between fields (performance) and table (presentation).
+             and the difference between fields (performance: prune columns early so less data flows down
+             the pipeline) and table (presentation: order columns for display, usually last). Show
+             "fields -foo" to drop a field, and that internal fields starting with _ (except _time,
+             _raw) are hidden unless you ask for them.
           3) A combined example building a clean table from raw events.
           Then give me 2 exercises, one at a time, and review my SPL before continuing.
         quiz_prompt: |
@@ -138,11 +147,15 @@ modules:
           I'm told it's the most important command in Splunk.
           Act as my instructor:
           1) The mental model: stats collapses events into a summary table (compare to SQL GROUP BY).
-          2) Functions count, dc, sum, avg, min, max, values, latest — short runnable
-             index=_internal examples.
+          2) Functions count, dc (distinct_count), sum, avg, min, max, values, list, latest — short
+             runnable index=_internal examples.
           3) Single and multiple "by" fields.
           4) The classic pattern: stats count by X | sort -count.
           Then give me 3 exercises of increasing difficulty, one at a time, and review each answer.
+          The multivalue gotcha to teach me precisely: values(X) returns the DISTINCT values sorted
+          lexicographically with no limit, whereas list(X) keeps every value in arrival order but caps
+          at 100. On a busy field they give very different output, so pick on purpose — I verified this:
+          values() gave 8 distinct, list() gave 100, on the same 500 events.
         quiz_prompt: |
           Quiz me on the stats command: 5 questions one at a time. Include one trap question about
           what happens to fields that aren't in the stats output, and two "write the SPL" tasks.
@@ -154,10 +167,16 @@ modules:
         goal: "Order results with sort and get instant frequency analysis with top and rare — and know when to use them vs stats."
         prompt: |
           I'm learning SPL and just learned stats. Teach me sort, top and rare:
-          1) sort with ascending/descending and multiple fields.
-          2) top and rare: what they output (count + percent), their limit option, and the "by" clause.
+          1) sort with ascending/descending and multiple fields — and that sort auto-detects the
+             collation: numeric fields sort numerically, IP fields as IPs, everything else
+             lexicographically (so "10" can sort before "9" on a field Splunk treats as text).
+          2) top and rare: what they output (count + percent), the limit option — and that top defaults
+             to limit=10, so the real distribution can hide below the cut unless you raise it — plus the
+             "by" clause.
           3) When top is enough vs when I should reach for stats — concrete guidance.
           Runnable index=_internal examples for everything. Then 2 exercises one at a time with review.
+          The gotcha to teach me: sort without a limit truncates large result sets (historically to
+          10000), and a "wrong" sort order is usually the numeric-vs-lexicographic collation above.
         quiz_prompt: |
           Quiz me on sort/top/rare: 4 questions one at a time, including one asking me to produce the
           same output with top and with stats+sort, and explain which I'd use when.
@@ -171,10 +190,14 @@ modules:
           I'm learning SPL — comfortable with filtering, stats, sort. Now teach me eval:
           1) The mental model: eval adds/overwrites a field per event.
           2) Arithmetic (bytes to MB), string functions (lower, substr, replace, the . concat operator).
-          3) Conditionals: if() and case() — e.g. classify response times into fast/ok/slow buckets.
+          3) Conditionals: if() and case() — e.g. classify response times into fast/ok/slow buckets — and
+             coalesce() to take the first non-null of several fields (the clean way to unify variant names).
           4) eval feeding into stats: eval first, aggregate after.
           Runnable index=_internal examples. Then 3 exercises one at a time; review my SPL each time
           and show the idiomatic form if mine is clumsy.
+          Two gotchas to teach me: case() returns NULL if no condition matches (add a final true() catch-all),
+          and eval is type-sensitive — "5" + 5 and numeric vs string comparison bite people, so use
+          tonumber()/tostring() when mixing types.
         quiz_prompt: |
           Quiz me on eval: 5 questions one at a time, mostly "write the eval expression for X".
           Include one combining eval and stats. Grade strictly.
