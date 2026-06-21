@@ -166,6 +166,32 @@ modules:
           Include one combining eval and stats. Grade strictly.
         practice: "In _internal, create a field that buckets events by the length of their _raw text (short/medium/long) and count events per bucket."
 
+      - slug: working-with-time
+        id: bE35bsuyyNpn
+        title: "Time mastery: _time, relative ranges, strftime"
+        goal: "Treat _time as the field it is — use relative-time modifiers with snap-to, format and parse times with strftime/strptime, bucket with bin, and understand why timezone/parsing mistakes put events in the wrong place."
+        prompt: |
+          I'm learning SPL and want to really understand time in Splunk — it keeps tripping me up.
+          Act as my instructor, with runnable index=_internal examples:
+          1) _time is epoch seconds on every event; the time range picker just sets earliest/latest.
+          2) Relative-time syntax: -24h, -7d, now — and the part people miss, snap-to with @:
+             -7d@d (7 days ago, snapped to midnight), @w0 (start of week). Show how @ changes results.
+          3) Humanise and parse: strftime(_time,"%Y-%m-%d %H:%M") to format; strptime("...","...") to turn
+             a string back into epoch. Verified example:
+             index=_internal | eval when=strftime(_time,"%Y-%m-%d %H:%M") | table _time when | head 5
+          4) Bucket time yourself with bin (what timechart does under the hood). Verified example:
+             index=_internal | bin _time span=1h | stats count by _time
+          5) Timezones: _time is stored in UTC and rendered in the user's TZ; a mismatch makes events
+             look hours off.
+          Then 2 exercises one at a time.
+          The field gotcha to teach me: when timestamp parsing is misconfigured at onboarding, every
+          event gets stamped with its INGEST time instead of the real one — so they all pile up at
+          "now" and time-based search becomes useless. (I'll meet this again in the parsing step.)
+        quiz_prompt: |
+          Quiz me on time in Splunk: 5 questions one at a time. Include one on what -7d@d means vs -7d,
+          one strftime/strptime task, and one "why are my events showing up in the future?" scenario.
+        practice: "On index=_internal, chart event volume per hour for the last 24h using bin _time span=1h and stats, then identify your instance's quietest hour."
+
   - title: Fields & Extraction
     steps:
       - slug: regex-for-splunk
@@ -342,6 +368,167 @@ modules:
           join-based search and ask me to rewrite it with stats. Grade the rewrite strictly.
         practice: "Write a correlation search across two _internal sourcetypes using the stats pattern (no join). Confirm the same answer a join would give."
 
+      - slug: transaction-vs-stats
+        id: oyleX19IJTay
+        title: "Grouping events: transaction vs stats"
+        goal: "Group related events into sessions with transaction (maxspan, maxpause, startswith/endswith), and know why stats-by-key is the faster default and when transaction is genuinely the right tool."
+        prompt: |
+          I'm at intermediate SPL. Teach me transaction and, honestly, when NOT to use it.
+          Act as my instructor with runnable index=_internal examples:
+          1) What transaction does: collapses events sharing a field into one multivalue event with
+             eventcount and duration. The controls: maxspan, maxpause, startswith/endswith.
+          2) Verified example — group access-log bursts by client with a 2-second gap:
+             index=_internal sourcetype=splunkd_access | transaction clientip maxpause=2s | stats count as transactions avg(eventcount) as avg_events
+             (on my instance this returns ~26 transactions.)
+          3) Why stats is usually better: transaction is memory-heavy and silently caps on big data.
+             For "duration and count per key", stats does it cheaper:
+             index=_internal sourcetype=splunkd_access | stats range(_time) as duration count by clientip
+          4) When transaction is genuinely right: you need start/end conditions or pause-based
+             sessionization that stats can't express.
+          Then give me one grouping problem and have me solve it both ways and compare.
+        quiz_prompt: |
+          Quiz me on transaction vs stats: 4 questions one at a time. Include one where I must rewrite a
+          transaction as stats, and one scenario where transaction is actually the correct choice.
+        practice: "On index=_internal sourcetype=splunkd_access, count per-client sessions two ways — transaction clientip maxpause=2s, then a stats equivalent — and compare the numbers and the runtimes."
+
+  - title: Knowledge Objects
+    steps:
+      - slug: eventtypes-and-tags
+        id: gqRcsH6FtDQZ
+        title: "Categorizing events: eventtypes and tags"
+        goal: "Label events by meaning with eventtypes (a saved condition becomes a category) and tags (a label on a field=value), so you search by intent — eventtype=error, tag=production — instead of brittle raw strings."
+        prompt: |
+          Teach me eventtypes and tags in Splunk — the start of normalization. I'll follow along on
+          index=_internal in my sandbox, in stages, waiting for me after each.
+          Act as my guide:
+          1) Eventtype: a saved search condition that becomes a label on every matching event. Define
+             one — e.g. "splunkd_error" = (index=_internal log_level=ERROR) — then I can just search
+             eventtype=splunkd_error.
+          2) Tags: a label attached to a specific field=value pair (e.g. tag a host as "webserver" and
+             "production"), so tag=webserver finds it regardless of the hostname.
+          3) Why both matter: they decouple WHAT you mean from HOW each source spells it, so one query
+             spans heterogeneous data — the idea CIM scales up later.
+          4) Where they live (Settings → Event types / Tags) and how permissions/scope work.
+        quiz_prompt: |
+          Quiz me on eventtypes and tags: 4 questions one at a time — eventtype vs tag, when to use each,
+          search-time cost, and a scenario mapping a messy multi-source search to eventtypes/tags.
+        practice: "Create an eventtype for _internal warnings (log_level=WARN) named like splunkd_warn, then confirm eventtype=splunkd_warn returns those events."
+
+      - slug: macros
+        id: sBD1FLq7W8j8
+        title: "Reusable SPL with search macros"
+        goal: "Factor repeated or complex SPL into named macros with arguments, called with backticks, so a fragment is defined once, reused everywhere, and fixed in one place."
+        prompt: |
+          Teach me search macros — I'm tired of pasting the same SPL everywhere.
+          Act as my instructor, with examples I can build in my sandbox:
+          1) The problem macros solve: duplicated SPL that you have to fix in ten places.
+          2) A macro is named SPL you call with backticks: `mymacro` or `mymacro(arg)`.
+          3) Define one in Settings → Advanced search → Search macros — e.g. noisy_sourcetypes =
+             (index=_internal | stats count by sourcetype | sort -count) — then call it with `noisy_sourcetypes`.
+          4) Arguments: add a count arg and use $count$ inside, validation expressions.
+          Walk me through creating and calling one, waiting for my result.
+          The gotcha to teach me: macros expand at PARSE time, so a slow macro hides its cost — expand
+          it in the search bar (Ctrl-Shift-E) or read the Job Inspector to see what really ran.
+        quiz_prompt: |
+          Quiz me on macros: 4 questions one at a time — what backticks do, when expansion happens,
+          how arguments substitute, and how you'd debug a macro that returns surprising results.
+        practice: "Define a macro top_sourcetypes(count) that returns the top N noisy _internal sourcetypes, then call it as `top_sourcetypes(5)` and `top_sourcetypes(10)`."
+
+      - slug: calculated-fields-and-aliases
+        id: thJMVQrG9UgZ
+        title: "Calculated fields and field aliases"
+        goal: "Make eval expressions and field renames automatic — calculated fields (an eval that always runs) and field aliases (unify differently-named fields) — so derived/normalized fields exist without retyping eval, the groundwork for CIM."
+        prompt: |
+          Teach me calculated fields and field aliases — I keep retyping the same eval and rename.
+          Act as my instructor:
+          1) Calculated field: an eval that runs automatically at search time for a sourcetype
+             (props.conf EVAL-name = expr). E.g. always derive resp_seconds = resp_ms / 1000 on
+             splunkd_access, so resp_seconds is just there.
+          2) Field alias: map differently-named fields to one canonical name (src_ip, clientip, ip → src).
+             This is the literal foundation of CIM normalization.
+          3) Where to set them (Settings → Fields → Calculated fields / Field aliases) and scoping to
+             the right sourcetype.
+          4) The search-time order of operations: aliases → extractions → calculated fields → lookups,
+             and why it matters when one depends on another.
+          Walk me through creating one calculated field in stages.
+          The gotcha to teach me: an alias is automatic and permanent whereas rename is per-search; and
+          calculated fields can't freely reference each other, so order matters.
+        quiz_prompt: |
+          Quiz me on calculated fields and aliases: 4 questions one at a time — alias vs rename,
+          calculated field vs inline eval, the order of operations, and one scenario choosing which to use.
+        practice: "Create a calculated field resp_seconds = resp_ms/1000 on the splunkd_access sourcetype (after you've made resp_ms permanent), and confirm resp_seconds appears with no eval in your search."
+
+  - title: Data Models, CIM & Acceleration
+    steps:
+      - slug: data-models-and-pivot
+        id: eNRRNInUz6h0
+        title: "Data models and Pivot"
+        goal: "Understand a data model as a curated, hierarchical schema over raw data, use Pivot to build reports without SPL, and know that acceleration is what makes models fast at scale."
+        prompt: |
+          Teach me data models and Pivot in Splunk.
+          Act as my instructor:
+          1) A data model is a curated object hierarchy (e.g. Web > request > successful requests) that
+             maps messy raw fields onto a consistent schema, built once by a knowledge manager.
+          2) Pivot: a point-and-click reporting UI on top of a data model — people who don't know SPL
+             build tables and charts from it.
+          3) Acceleration: a model can be accelerated (a background tsidx summary) so Pivot and tstats
+             run fast over huge volumes — this sets up the next step.
+          4) The datamodel and pivot commands for driving a model from SPL.
+          Be honest with me: my sandbox may not have any data models yet, so treat this as conceptual
+          and have me inspect whatever exists. Then ask me 3 check questions one at a time.
+          The gotcha to teach me: acceleration costs disk and a backfill, so you only accelerate models
+          you actually query often.
+        quiz_prompt: |
+          Quiz me on data models and Pivot: 4 questions one at a time — what a data model is for, Pivot
+          vs raw SPL, what acceleration buys you and what it costs, and who builds vs consumes a model.
+        practice: "In Settings → Data models, open any existing model (or a CIM model if an add-on is installed) and write down its root object plus two of its constraints."
+
+      - slug: tstats-and-acceleration
+        id: kyndvUckoQBv
+        title: "Fast analytics with tstats"
+        goal: "Run searches 10–100x faster with tstats by reading indexed/accelerated metadata instead of raw events, and know exactly what it can and can't operate on."
+        prompt: |
+          Teach me tstats — I want the fast-search command.
+          Act as my instructor with runnable examples:
+          1) Why it's fast: tstats reads tsidx (index-time metadata and accelerated data-model summaries)
+             instead of scanning raw events.
+          2) Verified example (indexed fields work without any data model):
+             | tstats count where index=_internal by sourcetype | sort -count
+          3) The hard limit: tstats only sees indexed fields (index, sourcetype, source, host, _time) or
+             accelerated data-model fields — NOT arbitrary search-time-extracted fields.
+          4) prestats=t feeding timechart, and | tstats ... from datamodel=<name> for accelerated models.
+          5) When to reach for it: dashboard panels and wide time ranges where stats is too slow.
+          Then have me convert one of my earlier stats searches to tstats and compare.
+          The gotcha to teach me: point tstats at a search-time field and it silently returns nothing —
+          it's metadata-only, so it can't see fields that only exist after extraction.
+        quiz_prompt: |
+          Quiz me on tstats: 4 questions one at a time — why it's fast, which fields it can use, one
+          "will this tstats work?" trap with a search-time field, and when you'd choose it over stats.
+        practice: "Run index=_internal | stats count by sourcetype and | tstats count where index=_internal by sourcetype, confirm the counts match, and compare the two runtimes in the Job Inspector."
+
+      - slug: cim-normalization
+        id: xLaAEYITDyc0
+        title: "Normalizing data with the CIM"
+        goal: "Understand the Common Information Model — canonical field names plus tags — and why CIM-compliant data lets one search, dashboard or app (like Enterprise Security) work across many vendors."
+        prompt: |
+          Teach me the Common Information Model (CIM) and why people keep mentioning it.
+          Act as my instructor:
+          1) The problem CIM solves: every vendor names fields differently (src_ip vs source_address vs
+             clientip). CIM defines canonical names (src, dest, action, user) and tags (authentication,
+             network_traffic) so a query doesn't care about the source.
+          2) How data becomes CIM-compliant: a TA (technology add-on) ships the field aliases, eventtypes
+             and tags that map a source onto a CIM data model — exactly the knowledge objects I just learned.
+          3) Why it matters: Enterprise Security and most premium apps assume CIM; a compliant source
+             "just works" in them, a non-compliant one shows empty panels.
+          4) The CIM add-on provides the models, and you validate compliance against them.
+          Be honest that this is conceptual unless I install the CIM add-on. Ask me 3 check questions.
+          The gotcha to teach me: "CIM-compliant" is a discipline, not a switch — partial compliance
+          makes premium-app dashboards fail silently rather than error.
+        quiz_prompt: |
+          Quiz me on CIM: 4 questions one at a time — what problem it solves, which knowledge objects
+          make data compliant, why ES needs it, and one scenario judging if a source is CIM-ready.
+        practice: "Pick a source you'd onboard (e.g. your router or firewall logs) and write down which CIM fields (src, dest, action, user) you would map its raw fields onto."
+
   - title: Dashboards, Alerts & Reports
     steps:
       - slug: reports-saved-searches
@@ -419,6 +606,30 @@ modules:
           me identify the problem and rewrite. Grade on whether my rewrite preserves the same results.
         practice: "Take your heaviest search from this path, open the Job Inspector, note the runtime, apply two optimizations, and measure again."
 
+      - slug: summary-indexing
+        id: c7ASlux3TLDL
+        title: "Scaling reports: summary indexing and acceleration"
+        goal: "Make long-range reports fast by pre-computing results — report acceleration, summary indexing (collect / si-commands), and data-model acceleration — and understand the freshness-vs-correctness trade-offs."
+        prompt: |
+          My dashboards over long time ranges are slow because they re-scan raw events every load.
+          Teach me how to pre-compute. Act as my instructor:
+          1) The problem: a "last 90 days" panel re-reading raw data on every refresh is wasteful.
+          2) Three approaches and when each fits:
+             - Report acceleration: a checkbox on a saved search; Splunk maintains a summary automatically.
+               Easiest and safest when it applies.
+             - Summary indexing: you schedule a search that writes condensed results into a summary
+               index with collect (or the si-commands sistats/sitimechart that store partial aggregates
+               you can re-aggregate later).
+             - Data-model acceleration: from the earlier module, for tstats/Pivot.
+          3) Walk me through enabling report acceleration on my hourly-volume report.
+          The gotcha to teach me: summary indexing trades freshness and correctness for speed — a missed
+          scheduled run leaves a GAP and a double-run causes OVERLAP (double-counting), so backfill and
+          scheduling discipline matter. Report acceleration avoids most of that, so prefer it when it fits.
+        quiz_prompt: |
+          Quiz me on scaling reports: 4 questions one at a time — report acceleration vs summary indexing,
+          what the si-commands store, the gap/overlap risk, and one scenario picking the right approach.
+        practice: "Enable report acceleration on your 'Hourly event volume by sourcetype' report, then run it over the last 7 days and confirm it returns fast (and note in Job Inspector that it used the acceleration summary)."
+
   - title: Getting Data In
     steps:
       - slug: forwarders-and-inputs
@@ -478,7 +689,33 @@ modules:
           diagnosis scenarios ("events look like X — what's misconfigured?"). Grade my reasoning.
         practice: "Ingest a small multi-line log sample (e.g. a Java stack trace) into your practice index and check: did line breaking and the timestamps come out right? If not, fix the sourcetype config."
 
-  - title: Administration Basics
+      - slug: metrics-and-mstats
+        id: h5zsZMmrKUtv
+        title: "Metrics indexes and mstats"
+        goal: "Understand metric indexes — a compact numeric time-series format — query them with mstats, and judge when a numeric stream should be a metric instead of a logged event."
+        prompt: |
+          Teach me Splunk metrics, as distinct from event logging.
+          Act as my instructor:
+          1) Metric vs event: a metric data point is just (timestamp, metric_name, value, dimensions) —
+             far more compact and much faster for pure numeric time series than indexing a full text event.
+          2) Metric indexes (datatype=metric) and how data gets in: HEC metrics endpoint, statsd, collectd.
+          3) mstats — the metrics analogue of stats/tstats:
+             | mstats avg(_value) WHERE metric_name="cpu.usage" by host span=1m
+             explain _value, metric_name, and dimensions.
+          4) When metrics win: high-cardinality CPU/memory/latency dashboards where you never need the
+             original raw text.
+          Be honest: my sandbox may have no metric index (my HEC health data went into an event index),
+          so the mstats example may not run as-is — show me the shape and how I'd create a metric index.
+          The gotcha to teach me: you can't grep a metric — there's no raw text to search — so only choose
+          metrics when you are sure you'll never need the original event.
+          A concrete tie-in for me: I push phone/watch sensor readings to Splunk via HEC today as events.
+          Help me reason about which of those streams (heart rate, steps, GPS) would be better as metrics.
+        quiz_prompt: |
+          Quiz me on metrics: 4 questions one at a time — metric vs event trade-offs, what mstats does,
+          when NOT to use metrics, and one scenario deciding metric-or-event for a given numeric stream.
+        practice: "For your own sensor data (e.g. heart-rate from the health project), write two lines deciding whether it should be stored as metrics or as events, and justify the choice."
+
+  - title: Administration & Automation
     steps:
       - slug: architecture-and-scaling
         id: o5b5jcCZfDg9
@@ -521,3 +758,55 @@ modules:
           Quiz me on Splunk admin basics: 4 questions one at a time — one role-design scenario,
           one "where do you look first" scenario, one btool question. Grade my answers.
         practice: "Create the readonly role and test user, log in as the test user in a private window, and confirm they can search practice but not _internal."
+
+      - slug: rest-api-and-automation
+        id: yqGBgnRnOOPI
+        title: "Driving Splunk by API"
+        goal: "Run searches and read/write configuration programmatically over the REST API on the management port (8089) and with the | rest command — the basis for automation, integration and dashboards-as-code."
+        prompt: |
+          Teach me how to drive Splunk programmatically, not just from the UI.
+          Act as my instructor:
+          1) The management API on port 8089 (https): everything the UI does is a REST call, authenticated
+             with username/password or a token.
+          2) Running a search by API: POST to /services/search/jobs (or the export endpoint), poll the job,
+             fetch results as JSON. Show me a curl skeleton.
+          3) The | rest SPL command to query Splunk's own state from a search, e.g.
+             | rest /services/server/info | fields version, then | rest /services/data/indexes.
+             Note this is a privileged generating command and may be restricted by role/capability.
+          4) Where this goes: scheduled scripts, CI, the Python SDK, dashboards-as-code.
+          Be honest: in some setups | rest is blocked by capability and will error — that's expected;
+          the curl path against :8089 is the general one.
+          The gotcha to teach me: the API uses the MANAGEMENT port (8089), not the web port (8000), and a
+          self-signed cert means you need curl -k. People burn time pointing tools at the wrong port.
+          A tie-in for me: this is the pull-side counterpart to how my home health pipeline already PUSHES
+          via HEC — help me see where an API pull would fit.
+        quiz_prompt: |
+          Quiz me on the Splunk API: 4 questions one at a time — which port and why, how a search job runs
+          over REST, what | rest is for and why it might be blocked, and one automation scenario.
+        practice: "From a shell, run: curl -k -u admin:<pass> https://<your-splunk>:8089/services/server/info  and find the version and build in the response."
+
+      - slug: apps-addons-and-deployment-server
+        id: q2OrhkZp9Giq
+        title: "Apps, add-ons (TAs) and the deployment server"
+        goal: "Understand the app/add-on ecosystem — why you install a TA instead of hand-writing props.conf — and how the deployment server pushes apps and config to many forwarders centrally."
+        prompt: |
+          Teach me about Splunk apps, add-ons, and managing config at scale.
+          Act as my instructor:
+          1) Apps vs add-ons (TAs): an app is a packaged UI + config bundle; a technology add-on (TA) is
+             config-only — the inputs, props/transforms and CIM mappings to onboard a source correctly.
+             Both come from Splunkbase.
+          2) Why TAs matter: for a known vendor you rarely hand-write props.conf — you install their TA and
+             the parsing/field-extraction/CIM-compliance is done for you.
+          3) The deployment server: the central manager that pushes apps and config to forwarders.
+             serverclass.conf maps apps → groups of forwarders; each forwarder runs deploymentclient.conf,
+             phones home, and pulls the apps assigned to it.
+          4) Why it exists: managing config on 10 — or 10,000 — forwarders by hand is impossible.
+          Be honest that this is conceptual on my single-instance sandbox; ask me 3 check questions.
+          The gotcha to teach me: the deployment server distributes CONFIG/APPS, not data — data routing is
+          outputs.conf / indexer discovery. People constantly confuse "deployment server" with data routing.
+          A tie-in for me: I already have cisco and linux data indexed — point me at which Splunkbase TAs
+          would have onboarded those sources for me with correct parsing and CIM fields.
+        quiz_prompt: |
+          Quiz me on apps/TAs and the deployment server: 4 questions one at a time — app vs TA, why install
+          a TA, what the deployment server distributes (and what it does NOT), and a serverclass scenario.
+        practice: "On Splunkbase, find the TA for a source you actually have (e.g. the Cisco or the *nix TA), and write down two things it would configure for you (an input, a sourcetype/parsing rule, or CIM fields)."
