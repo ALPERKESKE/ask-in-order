@@ -154,8 +154,9 @@ modules:
           Then give me 3 exercises of increasing difficulty, one at a time, and review each answer.
           The multivalue gotcha to teach me precisely: values(X) returns the DISTINCT values sorted
           lexicographically with no limit, whereas list(X) keeps every value in arrival order but caps
-          at 100. On a busy field they give very different output, so pick on purpose — I verified this:
-          values() gave 8 distinct, list() gave 100, on the same 500 events.
+          at 100. On a busy field they give very different output — over the same events, values() can
+          collapse to a handful of distinct entries while list() runs right up to its 100-value cap — so
+          pick on purpose. Have me run both on a field like sourcetype or component and compare the counts.
         quiz_prompt: |
           Quiz me on the stats command: 5 questions one at a time. Include one trap question about
           what happens to fields that aren't in the stats output, and two "write the SPL" tasks.
@@ -436,9 +437,9 @@ modules:
           Act as my instructor with runnable index=_internal examples:
           1) What transaction does: collapses events sharing a field into one multivalue event with
              eventcount and duration. The controls: maxspan, maxpause, startswith/endswith.
-          2) Verified example — group access-log bursts by client with a 2-second gap:
+          2) Runnable example — group access-log bursts by client with a 2-second gap (works on any
+             instance, since every Splunk logs its own splunkd_access):
              index=_internal sourcetype=splunkd_access | transaction clientip maxpause=2s | stats count as transactions avg(eventcount) as avg_events
-             (on my instance this returns ~26 transactions.)
           3) Why stats is usually better: transaction is memory-heavy and silently caps on big data.
              For "duration and count per key", stats does it cheaper:
              index=_internal sourcetype=splunkd_access | stats range(_time) as duration count by clientip
@@ -755,7 +756,7 @@ modules:
              key=value where the whole body becomes _raw.
           4) The Authorization: Splunk <token> header, and the listener port 8088 (separate from web 8000
              and management 8089).
-          Teach me these real-world gotchas that cost people hours (they cost me hours):
+          Teach me these real-world gotchas that cost people hours:
           - HTTP vs HTTPS: if HEC has SSL enabled you MUST use https:// — a plain http:// request just
             returns 000 / hangs with no useful error. Always match the protocol to the token's SSL setting.
           - "Where did my data go?": if you don't set index in the request, events land in the TOKEN'S
@@ -813,16 +814,16 @@ modules:
              explain _value, metric_name, and dimensions.
           4) When metrics win: high-cardinality CPU/memory/latency dashboards where you never need the
              original raw text.
-          Be honest: my sandbox may have no metric index (my HEC health data went into an event index),
-          so the mstats example may not run as-is — show me the shape and how I'd create a metric index.
+          Be honest: my sandbox may have no metric index yet (only event indexes), so the mstats example
+          may not run as-is — show me the shape and how I'd create a metric index.
           The gotcha to teach me: you can't grep a metric — there's no raw text to search — so only choose
           metrics when you are sure you'll never need the original event.
-          A concrete tie-in for me: I push phone/watch sensor readings to Splunk via HEC today as events.
-          Help me reason about which of those streams (heart rate, steps, GPS) would be better as metrics.
+          Then walk me through the decision on a concrete numeric stream (e.g. per-host CPU usage, or
+          request latency): is it better stored as a metric or as events, and why?
         quiz_prompt: |
           Quiz me on metrics: 4 questions one at a time — metric vs event trade-offs, what mstats does,
           when NOT to use metrics, and one scenario deciding metric-or-event for a given numeric stream.
-        practice: "For your own sensor data (e.g. heart-rate from the health project), write two lines deciding whether it should be stored as metrics or as events, and justify the choice."
+        practice: "Pick a numeric stream you might collect (CPU %, latency, temperature). Write two lines deciding whether it should be stored as metrics or as events, and justify the choice based on whether you'd ever need the raw text."
 
   - title: Administration & Automation
     steps:
@@ -895,8 +896,8 @@ modules:
           the curl path against :8089 is the general one.
           The gotcha to teach me: the API uses the MANAGEMENT port (8089), not the web port (8000), and a
           self-signed cert means you need curl -k. People burn time pointing tools at the wrong port.
-          A tie-in for me: this is the pull-side counterpart to how my home health pipeline already PUSHES
-          via HEC — help me see where an API pull would fit.
+          Help me place it next to HEC: HEC is the PUSH side (apps send data in over 8088), while the REST
+          API is the PULL/control side (run searches, read config over 8089) — when would I reach for each?
         quiz_prompt: |
           Quiz me on the Splunk API: 4 questions one at a time — which port and why, how a search job runs
           over REST, what | rest is for and why it might be blocked, and one automation scenario.
@@ -921,9 +922,9 @@ modules:
           Be honest that this is conceptual on my single-instance sandbox; ask me 3 check questions.
           The gotcha to teach me: the deployment server distributes CONFIG/APPS, not data — data routing is
           outputs.conf / indexer discovery. People constantly confuse "deployment server" with data routing.
-          A tie-in for me: I already have cisco and linux data indexed — point me at which Splunkbase TAs
-          would have onboarded those sources for me with correct parsing and CIM fields.
+          Make it concrete: pick a common source (say Linux *nix logs, or a Cisco device) and have me reason
+          about which Splunkbase TA would onboard it with the right parsing and CIM fields.
         quiz_prompt: |
           Quiz me on apps/TAs and the deployment server: 4 questions one at a time — app vs TA, why install
           a TA, what the deployment server distributes (and what it does NOT), and a serverclass scenario.
-        practice: "On Splunkbase, find the TA for a source you actually have (e.g. the Cisco or the *nix TA), and write down two things it would configure for you (an input, a sourcetype/parsing rule, or CIM fields)."
+        practice: "On Splunkbase, find the TA for a common source (e.g. the Splunk Add-on for Unix and Linux, or a Cisco TA), and write down two things it would configure for you (an input, a sourcetype/parsing rule, or CIM fields)."
