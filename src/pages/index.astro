@@ -37,13 +37,17 @@ const exPrompt = ex
       <a class="card card-compact" href={`/topics/${t.id}/`} data-cat={t.category}>
         <h3>{t.title}</h3>
         {t.status === 'ready'
-          ? <span class="pcount" data-card-badge data-ids={stepIds(t).join(',')}>{promptCount(t)} prompts</span>
+          ? <span class="pcount" data-card-badge data-ids={stepIds(t).join(',')}>{promptCount(t)} prompts{t.verification === 'live-tested' ? ' · ✓ live-tested' : ''}</span>
           : <span class="pcount soon">coming soon</span>}
         {t.status === 'ready' && (
           <div class="card-bar" hidden data-card-bar data-ids={stepIds(t).join(',')}><span></span></div>
         )}
       </a>
     ))}
+    <button class="card card-compact card-others" id="card-others" hidden>
+      <h3>Others</h3>
+      <span class="pcount" id="others-count"></span>
+    </button>
   </div>
 
   {ex && (
@@ -85,16 +89,35 @@ const exPrompt = ex
   />
 
   <script>
-    // Category tabs — filter the topic cards.
+    // Category tabs — filter the topic cards. At most 12 cards per view:
+    // if more match, show 11 and an "Others" card that reveals the rest.
+    const MAX_CARDS = 12;
     const catTabs = [...document.querySelectorAll('#cat-tabs .mtab')];
-    const cards = [...document.querySelectorAll('.topic-grid .card')];
+    const cards = [...document.querySelectorAll('.topic-grid .card[data-cat]')];
+    const othersCard = document.getElementById('card-others');
+    const othersCount = document.getElementById('others-count');
+    let activeCat = 'all';
+
+    function showCat(cat, revealAll) {
+      activeCat = cat;
+      const match = cards.filter((c) => cat === 'all' || c.dataset.cat === cat);
+      cards.forEach((c) => (c.hidden = !match.includes(c)));
+      if (!revealAll && match.length > MAX_CARDS) {
+        match.slice(MAX_CARDS - 1).forEach((c) => (c.hidden = true));
+        othersCount.textContent = `+${match.length - (MAX_CARDS - 1)} more`;
+        othersCard.hidden = false;
+      } else {
+        othersCard.hidden = true;
+      }
+    }
     catTabs.forEach((tab) => {
       tab.addEventListener('click', () => {
         catTabs.forEach((b) => b.classList.toggle('active', b === tab));
-        const cat = tab.dataset.cat;
-        cards.forEach((c) => (c.hidden = cat !== 'all' && c.dataset.cat !== cat));
+        showCat(tab.dataset.cat, false);
       });
     });
+    othersCard.addEventListener('click', () => showCat(activeCat, true));
+    showCat('all', false);
 
     // Show per-topic progress on the cards for returning visitors.
     // Keys are immutable step ids; each card carries its topic's id list.

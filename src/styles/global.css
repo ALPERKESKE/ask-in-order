@@ -133,6 +133,31 @@ footer.site {
 }
 .badge.skeleton { color: var(--warn-text); background: var(--warn-bg); }
 
+/* verification badge — honesty as a feature */
+.vline {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin: 0.9rem 0 0;
+}
+.vbadge {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.15rem 0.65rem;
+  border-radius: 99px;
+  white-space: nowrap;
+  color: var(--topic);
+  background: color-mix(in srgb, var(--topic) 12%, white);
+}
+.plib-kind.vlive {
+  color: var(--done);
+  background: color-mix(in srgb, var(--done) 12%, white);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 /* homepage category tabs above the topic cards */
 .cat-tabs { margin-top: 2.25rem; }
 .cat-tabs + .topic-grid { margin-top: 1.4rem; }
@@ -151,6 +176,19 @@ footer.site {
   color: var(--dim);
 }
 .pcount.soon { opacity: 0.65; }
+
+/* "Others" card — the 12th slot when a view has more topics than fit */
+.card-others {
+  border-style: dashed;
+  border-color: var(--border-strong);
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+}
+.card-others h3 { color: var(--dim); }
+.card-others:hover { border-color: var(--brand); }
+.card-others:hover h3 { color: var(--brand); }
 
 /* per-topic progress bar on the cards (shown only for returning visitors) */
 .card-bar {

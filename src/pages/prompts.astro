@@ -93,6 +93,7 @@ const searchable = (en) =>
           <span class={`plib-kind ${en.kind}`}>{en.kindLabel}</span>
           <span class="plib-topic">{en.t.title}</span>
           <span class="plib-mod">· {en.module.title}</span>
+          {en.t.verification === 'live-tested' && <span class="plib-kind vlive">✓ live-tested</span>}
         </div>
         <h2 class="plib-title">
           <a href={`/topics/${en.t.id}/${en.step.slug}/`}>{en.step.title}</a>

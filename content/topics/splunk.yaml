@@ -1,6 +1,8 @@
 id: splunk
 order: 1
 category: observability
+verification: live-tested
+last_verified: "2026-07-01"
 title: Splunk
 tagline: From zero to a confident Splunk user — searching, SPL, dashboards, alerts, data onboarding and admin basics.
 status: ready
@@ -24,6 +26,12 @@ modules:
           Quiz me on "what Splunk is": 3 questions, one at a time. Include one scenario question
           ("a team wants to do X — is Splunk a good fit, why/why not?"). Grade each answer briefly.
         practice: "Pick a real data source you can access (web, app, firewall or home-lab logs). Write down three concrete things: (a) what one raw line looks like, (b) two specific questions you'd want it to answer (e.g. 'which IP caused the most errors today?'), and (c) for each question, which field Splunk would need to extract to answer it."
+        checks:
+          - name: "content written against Splunk 9.x/10.x — flag on major bump"
+            via: splunk
+            run: '| rest /services/server/info splunk_server=local | fields version'
+            field: version
+            expect: '^(9|10)\.'
 
       - slug: core-concepts
         id: lWb6IszhZ7Od
@@ -162,6 +170,17 @@ modules:
           Quiz me on the stats command: 5 questions one at a time. Include one trap question about
           what happens to fields that aren't in the stats output, and two "write the SPL" tasks.
         practice: "Find the top 5 noisiest sourcetypes in your _internal index by event count, using stats and sort — not the top command."
+        checks:
+          - name: "stats values() returns sorted, deduplicated multivalue"
+            via: splunk
+            run: '| makeresults count=3 | streamstats count | eval x=case(count=1,"b",count=2,"a",count=3,"a") | stats values(x) as v | eval s=mvjoin(v,",") | fields s'
+            field: s
+            expect: '^a,b$'
+          - name: "stats list() caps at 100 values"
+            via: splunk
+            run: '| makeresults count=150 | streamstats count | stats list(count) as l | eval n=mvcount(l) | fields n'
+            field: n
+            expect: '^100$'
 
       - slug: sorting-top-rare
         id: qvIafOPvJSyq
@@ -183,6 +202,12 @@ modules:
           Quiz me on sort/top/rare: 4 questions one at a time, including one asking me to produce the
           same output with top and with stats+sort, and explain which I'd use when.
         practice: "Use rare on the sourcetype field of _internal — does anything surprising show up at the bottom of your instance's activity?"
+        checks:
+          - name: "top still defaults to limit=10"
+            via: splunk
+            run: '| makeresults count=200 | streamstats count | eval x="v".(count%20) | top x | stats count as rows'
+            field: rows
+            expect: '^10$'
 
       - slug: eval-essentials
         id: smG0Lntrfd26
@@ -285,6 +310,12 @@ modules:
           Quiz me on rex: 5 questions one at a time. At least two are "write the rex for X" on a given
           line; include one on what max_match=0 produces and one on sed mode. Grade strictly.
         practice: "On index=_internal sourcetype=splunkd, extract the log level and component with one rex and summarise them — verified pattern: rex \"\\d{2}:\\d{2}:\\d{2}\\.\\d+ [+-]\\d{4} (?<level>[A-Z]+)\\s+(?<component>\\w+)\" | stats count by level, component | sort -count."
+        checks:
+          - name: "rex max_match still defaults to 1 (first match only)"
+            via: splunk
+            run: '| makeresults | eval raw="x=1 x=2" | rex field=raw "x=(?<v>\d)" | eval n=mvcount(v) | fields n'
+            field: n
+            expect: '^1$'
 
       - slug: persistent-extractions
         id: ldE1Ken0WhTy
@@ -340,6 +371,12 @@ modules:
           Quiz me on multivalue fields: 4 questions one at a time — mvcount vs mvexpand, when to expand,
           how to recombine, and one scenario where stats-by-mv vs mvexpand-then-stats differ. Grade me.
         practice: "On index=_internal sourcetype=splunkd_access, find the request with the deepest URI path: split the path on '/', count segments with mvcount, and sort to the top."
+        checks:
+          - name: "mvexpand memory limit still 500MB (silent-truncation gotcha)"
+            via: splunk
+            run: '| rest /services/configs/conf-limits/mvexpand splunk_server=local | fields max_mem_usage_mb'
+            field: max_mem_usage_mb
+            expect: '^500$'
 
   - title: Intermediate SPL
     steps:
@@ -428,6 +465,27 @@ modules:
           Quiz me on subsearches and join: 4 questions one at a time. At least one must give me a
           join-based search and ask me to rewrite it with stats. Grade the rewrite strictly.
         practice: "Write a correlation search across two _internal sourcetypes using the stats pattern (no join). Confirm the same answer a join would give."
+        checks:
+          - name: "subsearch result cap still 10,000"
+            via: splunk
+            run: '| rest /services/configs/conf-limits/subsearch splunk_server=local | fields maxout'
+            field: maxout
+            expect: '^10000$'
+          - name: "subsearch time limit still 60s"
+            via: splunk
+            run: '| rest /services/configs/conf-limits/subsearch splunk_server=local | fields maxtime'
+            field: maxtime
+            expect: '^60$'
+          - name: "join subsearch_maxout still 50,000"
+            via: splunk
+            run: '| rest /services/configs/conf-limits/join splunk_server=local | fields subsearch_maxout'
+            field: subsearch_maxout
+            expect: '^50000$'
+          - name: "stats/sort result rows cap still 50,000"
+            via: splunk
+            run: '| rest /services/configs/conf-limits/searchresults splunk_server=local | fields maxresultrows'
+            field: maxresultrows
+            expect: '^50000$'
 
       - slug: transaction-vs-stats
         id: oyleX19IJTay

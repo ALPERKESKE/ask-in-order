@@ -4,3 +4,4 @@ dist/
 
 # MCP telemetry (local signal, not content)
 mcp/telemetry.jsonl
+verification-report.json

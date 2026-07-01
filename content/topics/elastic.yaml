@@ -1,0 +1,9 @@
+id: elastic
+# 1.5 slots this right after Splunk (order 1) without renumbering every topic
+order: 1.5
+category: observability
+title: "Elastic Stack"
+tagline: "Search and observability with Elasticsearch, Kibana and the ELK pipeline — from index basics to dashboards."
+status: skeleton
+color: "#0ea5e9"
+modules: []

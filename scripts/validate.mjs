@@ -12,13 +12,17 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIR = path.join(ROOT, 'content', 'topics');
 
 const STEP_REQUIRED = ['slug', 'id', 'title', 'goal', 'prompt', 'quiz_prompt', 'practice'];
-const STEP_ALLOWED = new Set([...STEP_REQUIRED, 'revised', 'revision_note', 'hardened']);
+const STEP_ALLOWED = new Set([...STEP_REQUIRED, 'revised', 'revision_note', 'hardened', 'checks']);
+const CHECK_REQUIRED = ['name', 'via', 'run', 'expect'];
+const CHECK_ALLOWED = new Set([...CHECK_REQUIRED, 'field']);
+const CHECK_VIA = new Set(['splunk', 'docker']);
 const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const ID_RE = /^[a-zA-Z][a-zA-Z0-9]{11}$/;
 const STATUS = new Set(['ready', 'skeleton']);
 const CATEGORIES = new Set(
   yaml.load(fs.readFileSync(path.join(ROOT, 'content', 'categories.yaml'), 'utf8')).map((c) => c.id)
 );
+const VERIFICATION = new Set(['live-tested', 'docs-checked', 'curated']);
 
 const errors = [];
 const warnings = [];
@@ -47,6 +51,12 @@ for (const f of files) {
   if (!STATUS.has(d.status)) errors.push(where(`"status" must be one of ${[...STATUS].join('|')}`));
   if (!CATEGORIES.has(d.category))
     errors.push(where(`"category" must be one of ${[...CATEGORIES].join('|')} (see content/categories.yaml)`));
+  if (d.verification !== undefined && !VERIFICATION.has(d.verification))
+    errors.push(where(`"verification" must be one of ${[...VERIFICATION].join('|')}`));
+  if (d.status === 'ready' && d.verification === undefined)
+    errors.push(where('ready topics must declare "verification" (live-tested|docs-checked|curated)'));
+  if (d.last_verified !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(String(d.last_verified)))
+    errors.push(where('"last_verified" must be a YYYY-MM-DD date string'));
   if (!Array.isArray(d.modules)) { errors.push(where('"modules" must be a list')); continue; }
 
   if (d.id) {
@@ -81,6 +91,21 @@ for (const f of files) {
         else ids.set(s.id, `${f}: ${s.slug}`);
       }
       if (s.hardened !== undefined && typeof s.hardened !== 'boolean') errors.push(where(`${at}: "hardened" must be boolean`));
+      if (s.checks !== undefined) {
+        if (!Array.isArray(s.checks)) errors.push(where(`${at}: "checks" must be a list`));
+        else s.checks.forEach((c, ci) => {
+          const cat = `${at}.checks[${ci}]`;
+          for (const k of CHECK_REQUIRED)
+            if (typeof c[k] !== 'string' || !c[k].trim()) errors.push(where(`${cat}: missing/empty "${k}"`));
+          for (const k of Object.keys(c))
+            if (!CHECK_ALLOWED.has(k)) errors.push(where(`${cat}: unknown key "${k}" (typo?)`));
+          if (c.via && !CHECK_VIA.has(c.via)) errors.push(where(`${cat}: "via" must be one of ${[...CHECK_VIA].join('|')}`));
+          if (typeof c.expect === 'string') {
+            try { new RegExp(c.expect); }
+            catch { errors.push(where(`${cat}: "expect" is not a valid regex`)); }
+          }
+        });
+      }
     });
   });
 

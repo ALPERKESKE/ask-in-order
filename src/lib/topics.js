@@ -31,6 +31,23 @@ export function stepCount(topic) {
   return topic.modules.reduce((n, m) => n + m.steps.length, 0);
 }
 
+// Verification tiers — honesty as a feature. The badge tells the visitor how
+// much this path has been checked, instead of implying everything is perfect.
+export const VERIFICATION = {
+  'live-tested': {
+    label: '✓ live-tested',
+    blurb: 'Every command and query in this path was run on a live system before publishing.',
+  },
+  'docs-checked': {
+    label: 'docs-checked',
+    blurb: 'Cross-referenced against the official documentation.',
+  },
+  curated: {
+    label: 'curated',
+    blurb: 'Written and ordered with care — not yet verified against a live system.',
+  },
+};
+
 // Copyable prompts in a topic (tutor + quiz) — what the homepage cards count.
 export function promptCount(topic) {
   return topic.modules.reduce(

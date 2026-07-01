@@ -1,7 +1,7 @@
 ---
 import Base from '../../../layouts/Base.astro';
 import Discussion from '../../../components/Discussion.astro';
-import { loadTopics, stepCount } from '../../../lib/topics.js';
+import { loadTopics, stepCount, VERIFICATION } from '../../../lib/topics.js';
 
 export function getStaticPaths() {
   return loadTopics().map((t) => ({ params: { topic: t.id }, props: { t } }));
@@ -9,6 +9,9 @@ export function getStaticPaths() {
 
 const { t } = Astro.props;
 const total = stepCount(t);
+const verif = VERIFICATION[t.verification];
+const checkCount = t.modules.reduce(
+  (n, m) => n + m.steps.reduce((k, s) => k + (s.checks?.length ?? 0), 0), 0);
 
 // number steps globally across modules (Step 1, Step 2, ...)
 let n = 0;
@@ -23,6 +26,16 @@ const modules = t.modules.map((m) => ({
     <section class="topic-hero">
       <h1>{t.title}</h1>
       <p class="lead">{t.tagline}</p>
+      {verif && (
+        <p class="vline">
+          <span class="vbadge">{verif.label}</span>
+          <span class="note">
+            {verif.blurb}
+            {checkCount > 0 && t.last_verified &&
+              ` ${checkCount} claims re-checked nightly against a live system — last verified ${t.last_verified}.`}
+          </span>
+        </p>
+      )}
       {t.status !== 'ready' && (
         <p><span class="badge skeleton">
           This path is a skeleton — the outline exists, the steps need authors. Contributions welcome.

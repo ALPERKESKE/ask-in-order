@@ -12,7 +12,8 @@
     "health": "node scripts/path-health.mjs",
     "triage": "node scripts/triage.mjs",
     "mcp": "node mcp/server.mjs",
-    "mcp:test": "node mcp/test-client.mjs"
+    "mcp:test": "node mcp/test-client.mjs",
+    "verify:live": "node scripts/verify-live.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
