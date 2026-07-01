@@ -1,5 +1,6 @@
 id: kubernetes
 order: 2
+category: devops
 title: Kubernetes
 tagline: Containers at scale — pods, deployments, services, and running real workloads.
 status: ready

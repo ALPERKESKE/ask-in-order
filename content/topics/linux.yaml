@@ -1,5 +1,6 @@
 id: linux
 order: 4
+category: systems
 title: Linux
 tagline: Command line confidence — files, processes, services, networking and shell scripting.
 status: ready

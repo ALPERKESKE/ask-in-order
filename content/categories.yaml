@@ -1,0 +1,14 @@
+# Homepage category tabs, in display order. Every topic's `category:` must
+# match an id here — validate.mjs enforces it.
+- id: systems
+  title: Systems & Networking
+- id: devops
+  title: DevOps & Cloud
+- id: programming
+  title: Programming
+- id: data
+  title: Data & Databases
+- id: observability
+  title: Observability
+- id: security
+  title: Security

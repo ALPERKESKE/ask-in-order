@@ -1,5 +1,6 @@
 id: splunk
 order: 1
+category: observability
 title: Splunk
 tagline: From zero to a confident Splunk user — searching, SPL, dashboards, alerts, data onboarding and admin basics.
 status: ready

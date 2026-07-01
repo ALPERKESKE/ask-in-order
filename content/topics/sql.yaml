@@ -1,0 +1,8 @@
+id: sql
+order: 7
+category: data
+title: "SQL & Databases"
+tagline: "Query, join, aggregate and design — practical SQL from SELECT to schema design decisions."
+status: skeleton
+color: "#9333ea"
+modules: []

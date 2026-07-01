@@ -16,6 +16,9 @@ const STEP_ALLOWED = new Set([...STEP_REQUIRED, 'revised', 'revision_note', 'har
 const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const ID_RE = /^[a-zA-Z][a-zA-Z0-9]{11}$/;
 const STATUS = new Set(['ready', 'skeleton']);
+const CATEGORIES = new Set(
+  yaml.load(fs.readFileSync(path.join(ROOT, 'content', 'categories.yaml'), 'utf8')).map((c) => c.id)
+);
 
 const errors = [];
 const warnings = [];
@@ -42,6 +45,8 @@ for (const f of files) {
   if (typeof d.order !== 'number') errors.push(where('top-level "order" must be a number'));
   if (d.color !== undefined && typeof d.color !== 'string') errors.push(where('"color" must be a string'));
   if (!STATUS.has(d.status)) errors.push(where(`"status" must be one of ${[...STATUS].join('|')}`));
+  if (!CATEGORIES.has(d.category))
+    errors.push(where(`"category" must be one of ${[...CATEGORIES].join('|')} (see content/categories.yaml)`));
   if (!Array.isArray(d.modules)) { errors.push(where('"modules" must be a list')); continue; }
 
   if (d.id) {

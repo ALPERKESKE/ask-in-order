@@ -1,0 +1,8 @@
+id: git
+order: 6
+category: programming
+title: "Git & GitHub"
+tagline: "Version control you actually understand — commits, branches, merges, remotes and pull-request workflow."
+status: skeleton
+color: "#e11d48"
+modules: []

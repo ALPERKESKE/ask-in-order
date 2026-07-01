@@ -1,5 +1,6 @@
 id: docker
 order: 3
+category: devops
 title: Docker
 tagline: From "it works on my machine" to images, containers, compose and production habits.
 status: ready

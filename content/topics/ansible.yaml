@@ -1,0 +1,8 @@
+id: ansible
+order: 10
+category: devops
+title: "Ansible"
+tagline: "Automate servers the readable way — inventories, playbooks, roles, idempotency and real-world runs."
+status: skeleton
+color: "#b91c1c"
+modules: []

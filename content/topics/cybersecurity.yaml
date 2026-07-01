@@ -1,0 +1,8 @@
+id: cybersecurity
+order: 12
+category: security
+title: "Cybersecurity Basics"
+tagline: "Think like an attacker, defend like an engineer — threats, auth, hardening, logging and incident basics."
+status: skeleton
+color: "#475569"
+modules: []

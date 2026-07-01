@@ -39,30 +39,80 @@ const modules = t.modules.map((m) => ({
       )}
     </section>
 
-    {modules.map((mod) => (
-      <section class="module">
-        <h2>{mod.title}</h2>
-        {mod.steps.length > 0 ? (
-          <ol class="path">
-            {mod.steps.map((s) => (
-              <li class="station" data-step={s.id}>
-                <span class="dot"></span>
-                <a class="station-card" href={`/topics/${t.id}/${s.slug}/`}>
-                  <span class="label">
-                    <span class="t">{s.title}</span>
-                    <span class="meta">Step {s.n} of {total}</span>
-                  </span>
-                  <span class="youarehere">You are here</span>
-                  <span class="check">✓</span>
-                </a>
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <div class="empty">No steps yet — this module is waiting for a contributor.</div>
-        )}
-      </section>
-    ))}
+    {modules.length === 0 && (
+      <div class="empty" style="margin: 2.25rem 0 0;">
+        No steps yet — this path is waiting for its first contributor.
+        Know the topic? <a href="/contribute/">Start it with a pull request.</a>
+      </div>
+    )}
+
+    <div class="path-area" id="path-area">
+      <div class="mod-tabs" role="tablist">
+        {modules.map((mod, i) => (
+          <button class="mtab" role="tab" data-tab={i}>
+            <span class="mt-name">{mod.title}</span>
+            <span class="mt-count" data-tab-count={i}>
+              {mod.steps.length > 0 ? `0/${mod.steps.length}` : '—'}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {modules.map((mod, i) => (
+        <section class="mod-panel" role="tabpanel" data-panel={i} hidden>
+          {mod.steps.length > 0 ? (
+            <div class="tile-grid">
+              {mod.steps.map((s) => (
+                <button
+                  class="tile"
+                  data-step={s.id}
+                  data-tile
+                  aria-label={`Step ${s.n}: ${s.title}`}
+                  title={s.title}
+                >
+                  <span class="num">{s.n}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div class="empty">No steps yet — this module is waiting for a contributor.</div>
+          )}
+        </section>
+      ))}
+
+      <!-- shared popover, filled from the templates below -->
+      <div class="pop" id="pop" hidden>
+        <p class="pop-meta" id="pop-meta"></p>
+        <h3 class="pop-title"><a id="pop-title" href="#"></a></h3>
+        <p class="pop-goal" id="pop-goal"></p>
+        <div class="prompt pop-prompt">
+          <div class="head">
+            <span>Ask your AI</span>
+            <button class="copy" id="pop-copy">Copy</button>
+          </div>
+          <div class="pop-body">
+            <pre id="pop-pre"></pre>
+            <div class="pop-fade"></div>
+          </div>
+        </div>
+        <div class="pop-actions">
+          <a class="pop-open" id="pop-open" href="#">Open step →</a>
+          <button class="pop-done" id="pop-done">✓ Mark as done</button>
+        </div>
+      </div>
+    </div>
+
+    {modules.map((mod) =>
+      mod.steps.map((s) => (
+        <template
+          data-tpl={s.id}
+          data-title={s.title}
+          data-goal={s.goal}
+          data-meta={`${mod.title} · step ${s.n} of ${total}${s.quiz_prompt ? ' · quiz' : ''}${s.practice ? ' · practice' : ''}`}
+          data-href={`/topics/${t.id}/${s.slug}/`}
+        >{s.prompt.trim()}</template>
+      ))
+    )}
 
     <Discussion
       term={t.id}
@@ -72,32 +122,166 @@ const modules = t.modules.map((m) => ({
   </div>
 
   <script>
-    const done = JSON.parse(localStorage.getItem('aio-done') || '{}');
-    const stations = [...document.querySelectorAll('[data-step]')];
-    let count = 0;
-    let currentEl = null;
-    for (const el of stations) {
-      if (done[el.dataset.step]) {
-        el.classList.add('done');
-        count++;
-      } else if (!currentEl) {
-        el.classList.add('current');
-        currentEl = el;
+    const store = () => JSON.parse(localStorage.getItem('aio-done') || '{}');
+    const save = (d) => localStorage.setItem('aio-done', JSON.stringify(d));
+
+    const area = document.getElementById('path-area');
+    const tabs = [...document.querySelectorAll('.mtab')];
+    const panels = [...document.querySelectorAll('.mod-panel')];
+    const tiles = [...document.querySelectorAll('[data-tile]')];
+    const total = tiles.length;
+
+    // ----- tabs -----
+    function openTab(i) {
+      tabs.forEach((b, j) => b.classList.toggle('active', j === i));
+      panels.forEach((p, j) => (p.hidden = j !== i));
+      hidePop();
+    }
+    tabs.forEach((b, i) => b.addEventListener('click', () => openTab(i)));
+
+    // ----- done / current state -----
+    function refresh() {
+      const done = store();
+      let count = 0;
+      let currentEl = null;
+      for (const el of tiles) {
+        const isDone = !!done[el.dataset.step];
+        el.classList.toggle('done', isDone);
+        if (isDone) count++;
+        el.classList.remove('current');
+        if (!isDone && !currentEl) currentEl = el;
       }
+      if (currentEl) currentEl.classList.add('current');
+
+      const label = document.querySelector('[data-progress-label]');
+      if (label) {
+        label.textContent = `${count} / ${total} completed`;
+        const bar = document.querySelector('[data-progress-bar]');
+        if (bar && total > 0) bar.style.width = `${(count / total) * 100}%`;
+      }
+      // per-module counts on the tabs
+      panels.forEach((p, i) => {
+        const t = [...p.querySelectorAll('[data-tile]')];
+        if (!t.length) return;
+        const d = t.filter((el) => el.classList.contains('done')).length;
+        const c = document.querySelector(`[data-tab-count="${i}"]`);
+        if (c) c.textContent = `${d}/${t.length}`;
+        tabs[i].classList.toggle('complete', d === t.length);
+      });
+      return { count, currentEl };
     }
-    const total = stations.length;
-    const label = document.querySelector('[data-progress-label]');
-    if (label) {
-      label.textContent = `${count} / ${total} completed`;
-      const bar = document.querySelector('[data-progress-bar]');
-      if (bar && total > 0) bar.style.width = `${(count / total) * 100}%`;
+
+    // ----- popover -----
+    const pop = document.getElementById('pop');
+    const popMeta = document.getElementById('pop-meta');
+    const popTitle = document.getElementById('pop-title');
+    const popGoal = document.getElementById('pop-goal');
+    const popPre = document.getElementById('pop-pre');
+    const popOpen = document.getElementById('pop-open');
+    const popCopy = document.getElementById('pop-copy');
+    const popDone = document.getElementById('pop-done');
+    let popFor = null; // step id currently shown
+    let hideTimer = null;
+    const isMobile = () => window.matchMedia('(max-width: 640px)').matches;
+
+    function fillPop(tile) {
+      const id = tile.dataset.step;
+      const tpl = document.querySelector(`template[data-tpl="${CSS.escape(id)}"]`);
+      if (!tpl) return false;
+      popFor = id;
+      popMeta.textContent = tpl.dataset.meta;
+      popTitle.textContent = tpl.dataset.title;
+      popTitle.href = tpl.dataset.href;
+      popGoal.textContent = tpl.dataset.goal;
+      popPre.textContent = tpl.content.textContent.trim();
+      popOpen.href = tpl.dataset.href;
+      renderDoneBtn();
+      return true;
     }
-    // Resume button: jump to the current step (or start / review when at the edges).
+    function renderDoneBtn() {
+      const isDone = !!store()[popFor];
+      popDone.classList.toggle('is-done', isDone);
+      popDone.textContent = isDone ? '✓ Done — undo' : '✓ Mark as done';
+    }
+    function showPop(tile) {
+      clearTimeout(hideTimer);
+      if (!fillPop(tile)) return;
+      pop.hidden = false;
+      pop.scrollTop = 0;
+      if (isMobile()) return; // CSS pins it as a bottom sheet
+      const wr = area.getBoundingClientRect();
+      const tr = tile.getBoundingClientRect();
+      const w = pop.offsetWidth;
+      const left = Math.max(0, Math.min(tr.left - wr.left + tr.width / 2 - w / 2, wr.width - w));
+      pop.style.left = `${left}px`;
+      pop.style.top = `${tr.bottom - wr.top + 12}px`;
+    }
+    function hidePop() {
+      pop.hidden = true;
+      popFor = null;
+    }
+    function delayedHide() {
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(hidePop, 200);
+    }
+
+    tiles.forEach((tile) => {
+      tile.addEventListener('mouseenter', () => { if (!isMobile()) showPop(tile); });
+      tile.addEventListener('mouseleave', delayedHide);
+      tile.addEventListener('click', () => {
+        if (popFor === tile.dataset.step && !pop.hidden && isMobile()) hidePop();
+        else showPop(tile);
+      });
+    });
+    pop.addEventListener('mouseenter', () => clearTimeout(hideTimer));
+    pop.addEventListener('mouseleave', delayedHide);
+    document.addEventListener('click', (ev) => {
+      if (!pop.hidden && !pop.contains(ev.target) && !ev.target.closest('[data-tile]')) hidePop();
+    });
+    document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') hidePop(); });
+
+    // copy (secure-context fallback for plain-HTTP LAN hosting)
+    function copyText(text) {
+      if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      return Promise.resolve();
+    }
+    popCopy.addEventListener('click', () => {
+      copyText(popPre.textContent).then(() => {
+        popCopy.textContent = 'Copied!';
+        setTimeout(() => (popCopy.textContent = 'Copy'), 1500);
+      });
+    });
+
+    // mark done from the popover — tile turns green in place
+    popDone.addEventListener('click', () => {
+      if (!popFor) return;
+      const d = store();
+      if (d[popFor]) delete d[popFor]; else d[popFor] = Date.now();
+      save(d);
+      refresh();
+      renderDoneBtn();
+    });
+
+    // ----- initial paint: open the tab that holds the next step -----
+    const { count, currentEl } = refresh();
+    const startPanel = currentEl ? panels.findIndex((p) => p.contains(currentEl)) : 0;
+    openTab(startPanel === -1 ? 0 : startPanel);
+
+    // resume button: jump to the current step (or start / review at the edges)
     const resume = document.querySelector('[data-resume]');
     if (resume && total > 0) {
-      const target = currentEl || stations[stations.length - 1];
-      const href = target?.querySelector('a.station-card')?.getAttribute('href');
-      if (href) resume.setAttribute('href', href);
+      const target = currentEl || tiles[tiles.length - 1];
+      const id = target?.dataset.step;
+      const tpl = id && document.querySelector(`template[data-tpl="${CSS.escape(id)}"]`);
+      if (tpl) resume.setAttribute('href', tpl.dataset.href);
       resume.textContent = count === 0 ? 'Start the path →'
         : count >= total ? 'Review the path →'
         : 'Continue where you left off →';

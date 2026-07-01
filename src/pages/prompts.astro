@@ -1,0 +1,204 @@
+---
+import Base from '../layouts/Base.astro';
+import { loadTopics, flatSteps } from '../lib/topics.js';
+
+// The library flattens every path into individual, copyable prompts.
+// One entry per prompt (tutor + quiz), so filters and search stay meaningful.
+const topics = loadTopics().filter((t) => t.status === 'ready');
+
+const entries = [];
+for (const t of topics) {
+  for (const e of flatSteps(t)) {
+    entries.push({
+      t,
+      step: e.step,
+      module: e.module,
+      index: e.index,
+      total: e.total,
+      kind: 'tutor',
+      kindLabel: 'Teach me',
+      text: e.step.prompt.trim(),
+    });
+    if (e.step.quiz_prompt) {
+      entries.push({
+        t,
+        step: e.step,
+        module: e.module,
+        index: e.index,
+        total: e.total,
+        kind: 'quiz',
+        kindLabel: 'Quiz me',
+        text: e.step.quiz_prompt.trim(),
+      });
+    }
+  }
+}
+
+const searchable = (en) =>
+  [en.step.title, en.step.goal, en.t.title, en.module.title, en.text]
+    .join(' ')
+    .toLowerCase();
+---
+<Base
+  title="Prompt library"
+  description="Ready-made learning prompts for ChatGPT, Claude and Gemini — curated, ordered and verified. Filter by topic, copy one, start learning."
+>
+  <div class="hero">
+    <h1>Prompt library</h1>
+    <p class="lead">
+      Every prompt from every path, in one place. Filter by topic, copy one, paste it
+      into ChatGPT, Claude or Gemini. Each prompt is written to <em>teach</em> — it
+      explains, quizzes you one question at a time, and waits for your answers.
+    </p>
+    <p class="note plib-note">
+      Prompts work on their own, but they were written in order — the link on each
+      card shows where it sits in the full path.
+    </p>
+  </div>
+
+  <div class="plib-toolbar">
+    <input
+      type="search"
+      id="plib-q"
+      placeholder={`Search ${entries.length} prompts — try "rex", "ingress", "systemd", "volumes"…`}
+      autocomplete="off"
+    />
+    <div class="chips" id="plib-topics">
+      <button class="chip active" data-topic="all">All topics</button>
+      {topics.map((t) => (
+        <button class="chip" data-topic={t.id} style={`--chip-c:${t.color}`}>
+          <span class="cdot"></span>{t.title}
+        </button>
+      ))}
+    </div>
+    <div class="chips" id="plib-kinds">
+      <button class="chip active" data-kind="all">All types</button>
+      <button class="chip" data-kind="tutor">Teach me</button>
+      <button class="chip" data-kind="quiz">Quiz me</button>
+    </div>
+  </div>
+
+  <p class="plib-count" id="plib-count"></p>
+
+  <div class="plib-list" id="plib-list">
+    {entries.map((en) => (
+      <article
+        class="plib-card"
+        style={`--topic:${en.t.color}`}
+        data-topic={en.t.id}
+        data-kind={en.kind}
+        data-search={searchable(en)}
+      >
+        <div class="plib-head">
+          <span class={`plib-kind ${en.kind}`}>{en.kindLabel}</span>
+          <span class="plib-topic">{en.t.title}</span>
+          <span class="plib-mod">· {en.module.title}</span>
+        </div>
+        <h2 class="plib-title">
+          <a href={`/topics/${en.t.id}/${en.step.slug}/`}>{en.step.title}</a>
+        </h2>
+        <p class="plib-goal">{en.step.goal}</p>
+        <div class="prompt plib-prompt">
+          <div class="head">
+            <span>Copy &amp; paste into your AI</span>
+            <button class="copy" data-copy>Copy</button>
+          </div>
+          <div class="plib-body">
+            <pre data-prompt-text>{en.text}</pre>
+            <div class="plib-fade"></div>
+          </div>
+          <button class="plib-expand" data-expand>Show full prompt ▾</button>
+        </div>
+        <p class="plib-foot">
+          <a href={`/topics/${en.t.id}/${en.step.slug}/`}>
+            Step {en.index + 1} of {en.total} in the {en.t.title} path →
+          </a>
+        </p>
+      </article>
+    ))}
+  </div>
+
+  <div class="empty plib-empty" id="plib-none" hidden>
+    No prompts match — try fewer filters or a different word.
+  </div>
+
+  <script>
+    // ----- copy (same secure-context fallback as step pages) -----
+    function copyText(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(text);
+      }
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      return Promise.resolve();
+    }
+    document.querySelectorAll('[data-copy]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const pre = btn.closest('.prompt').querySelector('[data-prompt-text]');
+        copyText(pre.textContent).then(() => {
+          btn.textContent = 'Copied!';
+          setTimeout(() => (btn.textContent = 'Copy'), 1500);
+        });
+      });
+    });
+
+    // ----- expand / collapse the long prompt bodies -----
+    document.querySelectorAll('[data-expand]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const p = btn.closest('.plib-prompt');
+        const open = p.classList.toggle('open');
+        btn.textContent = open ? 'Collapse ▴' : 'Show full prompt ▾';
+      });
+    });
+
+    // ----- filtering -----
+    const cards = Array.from(document.querySelectorAll('.plib-card'));
+    const countEl = document.getElementById('plib-count');
+    const noneEl = document.getElementById('plib-none');
+    const qEl = document.getElementById('plib-q');
+    const state = { topic: 'all', kind: 'all', q: '' };
+
+    function apply() {
+      let shown = 0;
+      const q = state.q.trim().toLowerCase();
+      for (const c of cards) {
+        const ok =
+          (state.topic === 'all' || c.dataset.topic === state.topic) &&
+          (state.kind === 'all' || c.dataset.kind === state.kind) &&
+          (!q || c.dataset.search.includes(q));
+        c.hidden = !ok;
+        if (ok) shown++;
+      }
+      countEl.textContent = `Showing ${shown} of ${cards.length} prompts`;
+      noneEl.hidden = shown !== 0;
+    }
+
+    function wireChips(containerId, key) {
+      const box = document.getElementById(containerId);
+      box.addEventListener('click', (ev) => {
+        const chip = ev.target.closest('.chip');
+        if (!chip) return;
+        state[key] = chip.dataset[key];
+        box.querySelectorAll('.chip').forEach((c) => c.classList.toggle('active', c === chip));
+        apply();
+      });
+    }
+    wireChips('plib-topics', 'topic');
+    wireChips('plib-kinds', 'kind');
+    qEl.addEventListener('input', () => { state.q = qEl.value; apply(); });
+
+    // shareable filters: /prompts/?topic=splunk&type=quiz&q=rex
+    const params = new URLSearchParams(location.search);
+    const pt = params.get('topic'), pk = params.get('type'), pq = params.get('q');
+    if (pt) document.querySelector(`#plib-topics .chip[data-topic="${CSS.escape(pt)}"]`)?.click();
+    if (pk) document.querySelector(`#plib-kinds .chip[data-kind="${CSS.escape(pk)}"]`)?.click();
+    if (pq) { qEl.value = pq; state.q = pq; }
+    apply();
+  </script>
+</Base>

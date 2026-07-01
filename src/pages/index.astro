@@ -1,9 +1,13 @@
 ---
 import Base from '../layouts/Base.astro';
 import Discussion from '../components/Discussion.astro';
-import { loadTopics, stepCount, stepIds, firstExample } from '../lib/topics.js';
+import { loadTopics, loadCategories, stepIds, promptCount, firstExample } from '../lib/topics.js';
 
 const topics = loadTopics();
+const categories = loadCategories().map((c) => ({
+  ...c,
+  count: topics.filter((t) => t.category === c.id).length,
+}));
 const ex = firstExample(topics);
 // Trim the example prompt to a few lines so the preview stays compact.
 const exPrompt = ex
@@ -21,14 +25,20 @@ const exPrompt = ex
     </p>
   </section>
 
+  <div class="mod-tabs cat-tabs" id="cat-tabs">
+    <button class="mtab active" data-cat="all">All <span class="mt-count">{topics.length}</span></button>
+    {categories.map((c) => (
+      <button class="mtab" data-cat={c.id}>{c.title} <span class="mt-count">{c.count}</span></button>
+    ))}
+  </div>
+
   <div class="topic-grid">
     {topics.map((t) => (
-      <a class="card" href={`/topics/${t.id}/`} style={`--topic:${t.color}`}>
+      <a class="card card-compact" href={`/topics/${t.id}/`} data-cat={t.category}>
         <h3>{t.title}</h3>
-        <p>{t.tagline}</p>
         {t.status === 'ready'
-          ? <span class="badge ready" data-card-badge data-ids={stepIds(t).join(',')}>{stepCount(t)} steps · ready</span>
-          : <span class="badge skeleton">skeleton · contributions welcome</span>}
+          ? <span class="pcount" data-card-badge data-ids={stepIds(t).join(',')}>{promptCount(t)} prompts</span>
+          : <span class="pcount soon">coming soon</span>}
         {t.status === 'ready' && (
           <div class="card-bar" hidden data-card-bar data-ids={stepIds(t).join(',')}><span></span></div>
         )}
@@ -75,6 +85,17 @@ const exPrompt = ex
   />
 
   <script>
+    // Category tabs — filter the topic cards.
+    const catTabs = [...document.querySelectorAll('#cat-tabs .mtab')];
+    const cards = [...document.querySelectorAll('.topic-grid .card')];
+    catTabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        catTabs.forEach((b) => b.classList.toggle('active', b === tab));
+        const cat = tab.dataset.cat;
+        cards.forEach((c) => (c.hidden = cat !== 'all' && c.dataset.cat !== cat));
+      });
+    });
+
     // Show per-topic progress on the cards for returning visitors.
     // Keys are immutable step ids; each card carries its topic's id list.
     const done = JSON.parse(localStorage.getItem('aio-done') || '{}');

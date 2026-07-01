@@ -3,6 +3,12 @@ import path from 'node:path';
 import yaml from 'js-yaml';
 
 const TOPICS_DIR = path.resolve('content/topics');
+const CATEGORIES_FILE = path.resolve('content/categories.yaml');
+
+// Homepage category tabs, in display order (single source: content/categories.yaml).
+export function loadCategories() {
+  return yaml.load(fs.readFileSync(CATEGORIES_FILE, 'utf8'));
+}
 
 export function loadTopics() {
   return fs
@@ -23,6 +29,14 @@ export function loadTopics() {
 
 export function stepCount(topic) {
   return topic.modules.reduce((n, m) => n + m.steps.length, 0);
+}
+
+// Copyable prompts in a topic (tutor + quiz) — what the homepage cards count.
+export function promptCount(topic) {
+  return topic.modules.reduce(
+    (n, m) => n + m.steps.reduce((k, s) => k + 1 + (s.quiz_prompt ? 1 : 0), 0),
+    0
+  );
 }
 
 // Immutable ids of every step in a topic — the stable join keys (progress, giscus).

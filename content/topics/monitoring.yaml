@@ -1,0 +1,8 @@
+id: monitoring
+order: 11
+category: observability
+title: "Monitoring — Prometheus & Grafana"
+tagline: "Metrics, dashboards and alerts — instrument a system, query with PromQL and build dashboards that matter."
+status: skeleton
+color: "#db2777"
+modules: []

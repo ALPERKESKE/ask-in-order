@@ -1,0 +1,8 @@
+id: python
+order: 5
+category: programming
+title: "Python"
+tagline: "From first script to confident everyday Python — syntax, data structures, files, errors and small real projects."
+status: skeleton
+color: "#ca8a04"
+modules: []

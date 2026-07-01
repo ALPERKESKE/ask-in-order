@@ -1,0 +1,8 @@
+id: terraform
+order: 9
+category: devops
+title: "Terraform"
+tagline: "Infrastructure as code from zero — providers, state, modules, plans and safe applies."
+status: skeleton
+color: "#7c3aed"
+modules: []
